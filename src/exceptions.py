@@ -33,3 +33,21 @@ def user_not_found_exception(user_id: int):
 def authentication_failed_exception():
     return HTTPException(status_code=401, detail="Неверные учетные данные.")
 '''Преобразование пользовательских исключений в HTTP-исключения'''
+
+class CommentNotFoundException(AppBaseException):
+    def __init__(self, comment_id: int):
+        message = f"Комментарий с ID {comment_id} не найден."
+        super().__init__(message)
+'''Исключение для случая, если комментарий не найден'''
+
+class CommentCreationException(AppBaseException):
+    def __init__(self):
+        message = "Ошибка при создании комментария."
+        super().__init__(message)
+'''Исключение для ошибки при создании комментария'''
+
+class CommentDeletionException(AppBaseException):
+    def __init__(self, comment_id: int):
+        message = f"Ошибка при удалении комментария с ID {comment_id}."
+        super().__init__(message)
+'''Исключение для ошибки при удалении комментария'''

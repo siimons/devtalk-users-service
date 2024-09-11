@@ -27,3 +27,11 @@ class UserLogin(BaseModel):
     email: Optional[EmailStr]
     password: str = Field(..., min_length=6)
     
+class CommentCreate(BaseModel):
+    user_id: int
+    article_id: int
+    content: str
+    
+class CommentDelete(BaseModel):
+    comment_id: int 
+    user_id: int

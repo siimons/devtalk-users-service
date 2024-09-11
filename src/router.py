@@ -1,24 +1,30 @@
 from fastapi import APIRouter, HTTPException
 
 from src.exceptions import (
-    AppBaseException,
     UserAlreadyExistsException,
     UserNotFoundException,
-    AuthenticationFailedException
+    AuthenticationFailedException,
+    CommentNotFoundException,
+    CommentCreationException,
+    CommentDeletionException
 )
 
 from src.schemes import (
     UserCreate,
     UserResponse,
     UserUpdate,
-    UserLogin
+    UserLogin,
+    CommentCreate,
+    CommentDelete
 )
 
 from src.service import (
     add_user,
     verify_password,
     get_user_info,
-    update_user_info
+    update_user_info,
+    add_comment,
+    delete_comment
 )
 
 router = APIRouter()
@@ -56,3 +62,23 @@ async def update_user(user: UserUpdate):
         return result 
     except UserNotFoundException as e:
         raise HTTPException(status_code=404, detail=e.message)
+    
+@router.post('/api/comments/')
+async def create_comment(comment: CommentCreate):
+    try:
+        result = await add_comment(comment.user_id, comment.article_id, comment.content)
+        return result
+    except CommentCreationException as e:
+        raise HTTPException(status_code=500, detail=e.message)
+    
+@router.delete('/api/comments/')
+async def remove_comment(comment: CommentDelete):
+    try:
+        result = await delete_comment(comment.comment_id, comment.user_id)
+        return result
+    except CommentNotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.message)
+    except CommentDeletionException as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при удалении комментария: {str(e)}")
