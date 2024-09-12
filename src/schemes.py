@@ -8,14 +8,6 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6)
 '''Схема для создания нового пользователя'''
 
-class UserResponse(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
-    is_active: bool
-    created_at: datetime
-'''Схема для отображения информации о пользователе'''
-
 class UserUpdate(BaseModel):
     id: int
     username: Optional[str] = Field(None, min_length=3, max_length=50)

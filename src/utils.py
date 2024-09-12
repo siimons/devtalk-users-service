@@ -19,7 +19,6 @@ async def get_db_pool() -> Pool:
     return pool
 '''Асинхронная функция для создания пула подключений к базе данных'''
 
-
 async def get_db_connection(pool: Pool):
     async with pool.acquire() as connection:
         async with connection.cursor() as cursor:

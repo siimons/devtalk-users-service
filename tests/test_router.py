@@ -8,9 +8,9 @@ client = TestClient(app)
 
 def test_create_user():
     new_user = {
-        'username': 'Boba',
-        'email': 'biba@yandex.ru',
-        'password': 'gjckeifybt'
+        'username': 'Finn',
+        'email': 'adventuretime@yandex.ru',
+        'password': 'gfdsaqz'
     }
     response = client.post('/api/users/', json=new_user)
     assert response.status_code == 200

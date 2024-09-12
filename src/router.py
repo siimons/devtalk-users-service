@@ -11,7 +11,6 @@ from src.exceptions import (
 
 from src.schemes import (
     UserCreate,
-    UserResponse,
     UserUpdate,
     UserLogin,
     CommentCreate,
@@ -21,7 +20,6 @@ from src.schemes import (
 from src.service import (
     add_user,
     verify_password,
-    get_user_info,
     update_user_info,
     add_comment,
     delete_comment
@@ -46,14 +44,6 @@ async def get_user(user: UserLogin):
         raise HTTPException(status_code=404, detail=e.message)
     except AuthenticationFailedException as e:
         raise HTTPException(status_code=401, detail=e.message)
-    
-@router.get('/api/user/info/')
-async def find_user_info(user: UserResponse):
-    try:
-        result = await get_user_info(user.id, user.username, user.email)
-        return result
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=404, detail=e.message)
     
 @router.put('/api/user/{id}')
 async def update_user(user: UserUpdate):

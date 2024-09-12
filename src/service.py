@@ -85,46 +85,6 @@ async def verify_password(email: str, password: str) -> bool:
         return {'message': 'Invalid password'}   
 '''Функция для хеширования паролей'''
 
-async def get_user_info(user_id: int = None, username: str = None, email: str = None) -> dict:
-    pool = await get_db_pool()
-    connection = None
-    try:
-        async with pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                
-                if user_id:
-                    query = "SELECT id, username, email, is_active, created_at FROM users WHERE id = %s"
-                    await cursor.execute(query, (user_id,))
-                elif username:
-                    query = "SELECT id, username, email, is_active, created_at FROM users WHERE username = %s"
-                    await cursor.execute(query, (username,))
-                elif email:
-                    query = "SELECT id, username, email, is_active, created_at FROM users WHERE email = %s"
-                    await cursor.execute(query, (email,))
-                else:
-                    raise HTTPException(status_code=400, detail="Необходимо указать id, username или email.")
-
-                user = await cursor.fetchone()
-
-                if not user:
-                    raise HTTPException(status_code=404, detail="Пользователь не найден.")
-
-                return {
-                    'id': user[0],
-                    'username': user[1],
-                    'email': user[2],
-                    'is_active': user[3],
-                    'created_at': user[4]
-                    }
-                
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка базы данных: {str(e)}")
-    finally:
-        if connection:
-            pool.close()
-            await pool.wait_closed()
-'''Фнкция для вывода информации о пользователе'''
-
 async def update_user_info(user_id: int, username: str = None, email: str = None, password: str = None) -> dict:
     pool = await get_db_pool()
 

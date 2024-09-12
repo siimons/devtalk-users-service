@@ -1,10 +1,23 @@
 import requests
 
 new_user = {
-    'email': 'bibashlep@yandex.ru',
-    'password': 'gjckeifybt'
+    'username': 'Finn',
+    'email': 'adventuretime@yandex.ru',
+    'password': 'gfdsaqz'
 }
 
-req = requests.post('http://localhost:8000/api/login', json=new_user)
+user_update = {
+    'id': 3,
+    'username': 'Jake',
+    'email': 'adventuretime@yandex.ru'
+}
 
-print(req.text, req.status_code)
+comment_create = {
+    'user_id': 3,
+    'article_id': 2,
+    'content': 'Сool bro!'
+}
+
+r = requests.post('http://localhost:8000/api/user/', json=new_user)
+
+print(r.text, r.status_code)
