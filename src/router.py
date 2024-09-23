@@ -9,7 +9,7 @@ from src.exceptions import (
     CommentDeletionException
 )
 
-from src.schemes import (
+from src.schemas import (
     UserCreate,
     UserUpdate,
     UserLogin,
