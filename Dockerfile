@@ -1,19 +1,19 @@
-# Используем минимальный образ Python
-FROM python:3.11-alpine
+# Указываем базовый образ Python
+FROM python:3.12.3-alpine
 
-# Устанавливаем зависимости для работы FastAPI и Uvicorn
-RUN apk add --no-cache gcc musl-dev libffi-dev
+# Устанавливаем зависимости для работы FastAPI и Uvicorn, а также сборки Python-зависимостей
+RUN apk add --no-cache gcc musl-dev libffi-dev libc-dev
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
 # Копируем файл зависимостей
-COPY requirements/base.txt /app/requirements.txt
+COPY requirements.txt .
 
 # Устанавливаем зависимости
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем все файлы приложения
+# Копируем остальные файлы приложения
 COPY . .
 
 # Открываем порт для приложения

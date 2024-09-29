@@ -1,92 +1,46 @@
-## Файловая структура проекта
+# Auth Service - Dev Talk
+
+## Описание
+dt-auth — это микросервис аутентификации и авторизации для сервиса публикации статей **Dev Talk**. Данный микросервис отвечает за регистрацию пользователей, аутентификацию, управление учетными записями и выдачу токенов доступа. Реализован с использованием FastAPI, MySQL, Redis (для кэширования сессий), и Kafka для обмена сообщениями с другими микросервисами.
+
+## Файловая структура микросервиса
 
 ```
-articols
-├── alembic/ # Для миграции базы данных
-├── src # Основные файлы
-│   ├── auth
-│   │   ├── router.py # роуты
-│   │   ├── schemas.py  # pydantic models (для запросов)
-│   │   ├── models.py  # db models
-│   │   ├── dependencies.py # скорее всего не нужно будет
-│   │   ├── config.py  # local configs
-│   │   ├── constants.py
-│   │   ├── exceptions.py
-│   │   ├── service.py # бизнес-логика
-│   │   └── utils.py # функции для работы
-│   ├── articles
-│   │   ├── router.py  
-│   │   ├── schemas.py
-│   │   ├── config.py
-│   │   ├── constants.py
-│   │   ├── exceptions.py
-│   │   └── utils.py
-│   └── comments
-│   │   ├── router.py
-│   │   ├── schemas.py
-│   │   ├── models.py
-│   │   ├── dependencies.py
-│   │   ├── constants.py
-│   │   ├── exceptions.py
-│   │   ├── service.py
-│   │   └── utils.py
-│   ├── config.py  # global configs
-│   ├── models.py  # global models
-│   ├── exceptions.py  # global exceptions
-│   ├── pagination.py  # global module e.g. pagination
-│   ├── database.py  # db connection related stuff
-│   └── main.py
+dev-talk-auth/
+├── src/
+│   ├── router.py               # Маршруты для аутентификации
+│   ├── schemas.py              # Pydantic-схемы (например, UserCreate, Token)
+│   ├── service.py              # Бизнес-логика для управления пользователями
+│   ├── models.sql              # Описание моделей данных (таблицы базы данных)
+│   ├── dependencies.py         # Зависимости для проверок токенов и прав доступа
+│   ├── config.py               # Конфигурации микросервиса
+│   ├── exceptions.py           # Обработка исключений
+│   ├── kafka_producer.py       # Продюсер Kafka
+│   ├── redis_cache.py          # Логика для работы с Redis
+│   └── utils.py                # Утилиты
 ├── tests/
-│   ├── auth
-│   ├── articles
-│   └── comments
-├── templates/
-│   └── index.html
-├── requirements
-│   ├── base.txt
-│   ├── dev.txt
-│   └── prod.txt
-├── .env
-├── .gitignore
-├── logging.ini
-└── alembic.ini
+│   ├── test_auth.py            # Тесты для бизнес-логики и API
+│   └── test_utils.py           # Тесты для вспомогательных функций
+├── Dockerfile                  # Docker-конфигурация для микросервиса
+├── main.py                     # Точка входа для FastAPI
+├── requirements.txt            # Зависимости Python
+└── .env                        # Переменные окружения
 ```
 
+## Функциональность
 
+### CRUD операции для пользователей:
 
-## CRUD
+- POST `/api/auth/register` — регистрация нового пользователя
+- POST `/api/auth/login` — аутентификация (логин) пользователя
+- GET `/api/auth/user/{id}` — получение данных профиля пользователя
+- PUT `/api/auth/user/{id}` — обновление данных профиля пользователя
+- DELETE `/api/auth/user/{id}` — удаление учетной записи пользователя
 
-Нужно создать ручки с помощью FastAPI.
+## Стек технологий
 
-### Статьи
-
-- POST `/api/article/` - Создание статьи
-
-- PUT `/api/article/{id}` - Изменение статьи
-
-- DELETE `/api/article/{id}` - Удаление статьи
-
-- GET `/api/articles/` - Получить все id статей
-
-- GET `/api/article/{article_id}` - Получить какую-то отдельную статью (пригождается редко)
-
-### Теги
-
-Начинаются с символа #. На одной статье может быть не больше шести
-
-- GET `/api/tags/{article_id}`
-
-```json
-[
-    {
-        "id": "1241293",
-        "tags": "C++, ML"
-    }
-]
-```
-
-- POST `/api/tags/` - На вход подаём список с тегами. На Backend'e проверяем, есть ли тег в базе. Если есть, не добавляем
-
-### Комментарии
-
-- GET `/api/comments/{article_id}`
+- **FastAPI** — для создания REST API.
+- **Redis** — для кэширования популярных комментариев.
+- **Kafka** — для обмена сообщениями между микросервисами.
+- **Docker** — для контейнеризации приложения.
+- **MySQL** — в качестве основной базы данных.
