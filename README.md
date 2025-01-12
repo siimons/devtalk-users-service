@@ -1,46 +1,69 @@
-# Auth Service - Dev Talk
+# User Service - Dev Talk
 
 ## Описание
-dt-auth — это микросервис аутентификации и авторизации для сервиса публикации статей **Dev Talk**. Данный микросервис отвечает за регистрацию пользователей, аутентификацию, управление учетными записями и выдачу токенов доступа. Реализован с использованием FastAPI, MySQL, Redis (для кэширования сессий), и Kafka для обмена сообщениями с другими микросервисами.
+
+**dt-users** — это микросервис для управления пользователями в платформе **Dev Talk**. Данный микросервис отвечает за регистрацию, авторизацию, получение информации о пользователях, а также за их удаление. Сервис разработан на базе FastAPI и использует MySQL в качестве базы данных. Взаимодействие с другими микросервисами происходит через Kafka.
 
 ## Файловая структура микросервиса
 
 ```
-dev-talk-auth/
-├── src/
-│   ├── router.py               # Маршруты для аутентификации
-│   ├── schemas.py              # Pydantic-схемы (например, UserCreate, Token)
-│   ├── service.py              # Бизнес-логика для управления пользователями
-│   ├── models.sql              # Описание моделей данных (таблицы базы данных)
-│   ├── dependencies.py         # Зависимости для проверок токенов и прав доступа
-│   ├── config.py               # Конфигурации микросервиса
-│   ├── exceptions.py           # Обработка исключений
-│   ├── kafka_producer.py       # Продюсер Kafka
-│   ├── redis_cache.py          # Логика для работы с Redis
-│   └── utils.py                # Утилиты
+dev-talk-users/
+|
+├── app/
+│   ├── __init__.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── v1/
+│   │   │   ├── __init__.py
+│   │   │   ├── exceptions.py
+│   │   │   ├── schemas.py
+│   │   │   ├── views.py
+│   │   │   ├── crud.py
+│   │   │   └── services.py
+│   │   ├── cache/
+│   │   │   ├── __init__.py
+│   │   │   ├── cache_service.py
+│   │   │   └── cache_exceptions.py
+│   │   └── common/
+│   │       ├── __init__.py
+│   │       └── utils.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── logging.py
+│   │   └── database.py
+│   └── events/
+│       ├── __init__.py
+│       ├── producer.py
+│       └── consumer.py
+|
+├── migrations/
+│   ├── __init__.py
+│   └── models.sql
+|
 ├── tests/
-│   ├── test_auth.py            # Тесты для бизнес-логики и API
-│   └── test_utils.py           # Тесты для вспомогательных функций
-├── Dockerfile                  # Docker-конфигурация для микросервиса
-├── main.py                     # Точка входа для FastAPI
-├── requirements.txt            # Зависимости Python
-└── .env                        # Переменные окружения
+│   ├── unit/
+│   │   ├── test_users.py
+│   │   └── test_database.py
+│   └── integration/
+│       ├── test_endpoints.py
+│       └── test_kafka.py
+|
+├── .env
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── main.py
+├── README.md
+└── requirements.txt
 ```
 
 ## Функциональность
 
-### CRUD операции для пользователей:
+### CRUD
 
-- POST `/api/auth/register` — регистрация нового пользователя
-- POST `/api/auth/login` — аутентификация (логин) пользователя
-- GET `/api/auth/user/{id}` — получение данных профиля пользователя
-- PUT `/api/auth/user/{id}` — обновление данных профиля пользователя
-- DELETE `/api/auth/user/{id}` — удаление учетной записи пользователя
-
-## Стек технологий
-
-- **FastAPI** — для создания REST API.
-- **Redis** — для кэширования популярных комментариев.
-- **Kafka** — для обмена сообщениями между микросервисами.
-- **Docker** — для контейнеризации приложения.
-- **MySQL** — в качестве основной базы данных.
+- POST `/api/v1/users` — создание нового пользователя.
+- POST `/api/v1/auth/login` — вход пользователя в систему (аутентификация).
+- GET `/api/v1/users/{user_id}` — получение информации о пользователе по его ID.
+- PUT `/api/v1/users/{user_id}` — обновление информации о пользователе.
+- DELETE `/api/v1/users/{user_id}` — удаление пользователя.
