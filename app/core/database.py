@@ -71,18 +71,3 @@ class Database:
             logger.error(f"Ошибка при выполнении запроса: {e}")
             raise
 
-
-# Точка входа для запуска файла напрямую
-if __name__ == "__main__":
-
-    async def test_database_connection():
-        db = Database()
-        try:
-            await db.connect()
-            logger.info("Тест подключения к базе данных выполнен успешно.")
-        except Exception as e:
-            logger.error(f"Тест подключения к базе данных завершился ошибкой: {e}")
-        finally:
-            await db.close()
-
-    asyncio.run(test_database_connection())

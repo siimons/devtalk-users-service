@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.core.database import Database
+from app.api.v1.services import UserService
 
 from app.api.v1.schemas import (
     UserCreate,
@@ -10,13 +11,17 @@ from app.api.v1.schemas import (
     User
 )
 
-from app.api.v1.exceptions import (
-    InvalidCredentialsException,
-    invalid_credentials_exception
-)
-
 router = APIRouter()
+db = Database()
+user_service = UserService()
 
-@router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
-async def create_user_endpoint(user: UserCreate):
-    pass
+@router.post("/users", summary="Создать нового пользователя", response_model=dict)
+async def create_user_endpoint(user_data: UserCreate):
+    """
+    Создание нового пользователя.
+    ---
+    - **email**: Электронная почта нового пользователя.
+    - **username**: Имя пользователя.
+    - **password**: Пароль пользователя.
+    """
+    return await user_service.register_user(user_data)
