@@ -1,23 +1,28 @@
-# Указываем базовый образ Python
-FROM python:3.12.3-alpine
+# Указываем базовый образ
+FROM python:3.12-slim
 
-# Устанавливаем зависимости для работы FastAPI и Uvicorn, а также сборки Python-зависимостей
-RUN apk add --no-cache gcc musl-dev libffi-dev libc-dev
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    libc-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем рабочую директорию
+# Задаём рабочую директорию
 WORKDIR /app
 
-# Копируем файл зависимостей
+# Копируем только requirements.txt для установки зависимостей (для кеширования слоёв)
 COPY requirements.txt .
 
-# Устанавливаем зависимости
+# Устанавливаем Python-зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем остальные файлы приложения
+# Копируем остальной код
 COPY . .
 
-# Открываем порт для приложения
+# Открываем порт
 EXPOSE 8000
 
-# Запускаем FastAPI приложение с Uvicorn
+# Команда запуска приложения
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -5,10 +5,10 @@ from app.api.v1.exceptions import UserAlreadyExistsException
 from app.core.logging import logger
 from app.api.common.utils import hash_password
 
-db = Database()
-
-async def create_user(user: UserCreate):
-    """Создание нового пользователя"""
+async def create_user(db: Database, user: UserCreate) -> dict:
+    """
+    Создание нового пользователя
+    """
     query_check = "SELECT id FROM users WHERE email = %s"
     existing_user = await db.fetch(query_check, user.email)
     

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
 from app.core.database import Database
+from app.core.dependencies import get_database
 from app.api.v1.services import UserService
 
 from app.api.v1.schemas import (
@@ -12,11 +13,13 @@ from app.api.v1.schemas import (
 )
 
 router = APIRouter()
-db = Database()
 user_service = UserService()
 
-@router.post("/users", summary="Создать нового пользователя", response_model=dict)
-async def create_user_endpoint(user_data: UserCreate):
+@router.post("/users", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def create_user_endpoint(
+    user_data: UserCreate,
+    db: Database = Depends(get_database)
+):
     """
     Создание нового пользователя.
     ---
@@ -24,4 +27,4 @@ async def create_user_endpoint(user_data: UserCreate):
     - **username**: Имя пользователя.
     - **password**: Пароль пользователя.
     """
-    return await user_service.register_user(user_data)
+    return await user_service.register_user(db, user_data)

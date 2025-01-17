@@ -31,6 +31,7 @@ dev-talk-users/
 │   │   ├── __init__.py
 │   │   ├── config.py
 │   │   ├── logging.py
+│   │   ├── dependencies.py
 │   │   └── database.py
 │   └── events/
 │       ├── __init__.py
