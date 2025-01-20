@@ -28,3 +28,15 @@ async def create_user_endpoint(
     - **password**: Пароль пользователя.
     """
     return await user_service.register_user(db, user_data)
+
+@router.get("/users/{user_id}", response_model=dict, status_code=status.HTTP_200_OK)
+async def get_user_endpoint(
+    user_id: int,
+    db: Database = Depends(get_database)
+):
+    """
+    Получение информации о пользователе по его ID.
+    ---
+    - **user_id**: Уникальный идентификатор пользователя.
+    """
+    return await user_service.get_user(db, user_id)

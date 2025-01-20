@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from app.core.database import Database
-from app.api.v1.crud import create_user
+from app.api.v1.crud import create_user, get_user_by_id
 
 from app.api.v1.schemas import (
     UserCreate,
@@ -41,4 +41,22 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Ошибка при регистрации пользователя."
+            )
+
+    async def get_user(self, db: Database, user_id: int) -> dict:
+        """
+        Получение информации о пользователе по его ID.
+        """
+        try:
+            logger.info(f"Запрос данных пользователя с ID {user_id}.")
+            user = await get_user_by_id(db, user_id)
+            logger.success(f"Данные пользователя с ID {user_id} успешно получены.")
+            return user
+        except UserNotFoundException:
+            raise user_not_found_exception(user_id)
+        except Exception as e:
+            logger.error(f"Неизвестная ошибка при получении данных пользователя с ID {user_id}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Внутренняя ошибка сервера при получении данных пользователя."
             )

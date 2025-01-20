@@ -1,4 +1,3 @@
-import asyncio
 import aiomysql
 from typing import List, Optional
 
@@ -71,3 +70,25 @@ class Database:
             logger.error(f"Ошибка при выполнении запроса: {e}")
             raise
 
+    async def start_transaction(self):
+        """Начало транзакции"""
+        logger.info("Начало транзакции...")
+        async with self.pool.acquire() as connection:
+            connection.autocommit(False)
+            self._connection = connection
+
+    async def commit_transaction(self):
+        """Фиксация транзакции"""
+        if hasattr(self, '_connection'):
+            logger.info("Фиксация транзакции...")
+            await self._connection.commit()
+            self._connection.autocommit(True)
+            self._connection = None
+
+    async def rollback_transaction(self):
+        """Откат транзакции"""
+        if hasattr(self, '_connection'):
+            logger.info("Откат транзакции...")
+            await self._connection.rollback()
+            self._connection.autocommit(True)
+            self._connection = None
