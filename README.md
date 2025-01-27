@@ -22,8 +22,8 @@ dev-talk-users/
 │   │   │   └── services.py
 │   │   ├── cache/
 │   │   │   ├── __init__.py
-│   │   │   ├── cache_service.py
-│   │   │   └── cache_exceptions.py
+│   │   │   ├── service.py
+│   │   │   └── exceptions.py
 │   │   └── common/
 │   │       ├── __init__.py
 │   │       └── utils.py
@@ -43,12 +43,30 @@ dev-talk-users/
 │   └── models.sql
 |
 ├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
 │   ├── unit/
-│   │   ├── test_users.py
-│   │   └── test_database.py
-│   └── integration/
-│       ├── test_endpoints.py
-│       └── test_kafka.py
+│   │   ├── __init__.py
+│   │   ├── test_services.py
+│   │   ├── test_database.py
+│   │   ├── test_cache.py
+│   │   └── test_utils.py
+│   ├── integration/
+│   │   ├── __init__.py
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_create_user.py
+│   │   │   ├── test_get_user.py
+│   │   │   ├── test_update_user.py
+│   │   │   ├── test_delete_user.py
+│   │   │   └── test_list_users.py
+│   │   └── events/
+│   │       ├── __init__.py
+│   │       ├── test_kafka_producer.py
+│   │       └── test_kafka_consumer.py
+│   └── e2e/
+│       ├── __init__.py
+│       └── test_user_flow.py
 |
 ├── .env
 ├── .gitignore

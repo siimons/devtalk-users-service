@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     MYSQL_PASSWORD: str
     MYSQL_DATABASE: str
 
+    TESTING: bool = True
+
     class Config:
         env_file = ".env"
         extra = "ignore"
