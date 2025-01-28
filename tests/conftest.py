@@ -1,10 +1,22 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
 from app.api.v1.views import router
 from app.core.dependencies import db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Настройка жизненного цикла приложения для тестов.
+    """
+    await db.connect()
+    yield
+    await db.close()
 
 
 @pytest.fixture
@@ -12,16 +24,7 @@ def app() -> FastAPI:
     """
     Создаёт экземпляр приложения FastAPI с подключённым роутером.
     """
-    app = FastAPI()
-
-    @app.on_event("startup")
-    async def startup_event():
-        await db.connect()
-
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        await db.close()
-
+    app = FastAPI(lifespan=lifespan)
     app.include_router(router, prefix="/api/v1")
     return app
 
