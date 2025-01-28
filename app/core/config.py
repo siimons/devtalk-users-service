@@ -1,4 +1,6 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
+
 
 class Settings(BaseSettings):
     LOG_FILE_PATH: str = "logs/app.log"
@@ -14,8 +16,7 @@ class Settings(BaseSettings):
 
     TESTING: bool = True
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = ConfigDict(env_file=".env", extra="ignore")
+
 
 settings = Settings()

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -10,8 +10,7 @@ class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя")
     email: EmailStr = Field(..., description="Email пользователя")
 
-    class Config:
-        str_strip_whitespace = True
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class UserCreate(UserBase):
@@ -37,8 +36,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = Field(None, description="Обновлённый email пользователя")
     password: Optional[str] = Field(None, min_length=8, description="Обновлённый пароль пользователя")
 
-    class Config:
-        str_strip_whitespace = True
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class UserDelete(BaseModel):

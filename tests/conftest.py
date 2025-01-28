@@ -1,6 +1,6 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
@@ -34,7 +34,8 @@ async def client(app: FastAPI):
     """
     Асинхронный клиент для тестирования.
     """
-    async with AsyncClient(app=app, base_url="http://testserver") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
         yield ac
 
 
