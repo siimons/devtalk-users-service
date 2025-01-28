@@ -22,8 +22,7 @@ dev-talk-users/
 │   │   │   └── services.py
 │   │   ├── cache/
 │   │   │   ├── __init__.py
-│   │   │   ├── service.py
-│   │   │   └── exceptions.py
+│   │   │   └── memcached_manager.py
 │   │   └── common/
 │   │       ├── __init__.py
 │   │       └── utils.py

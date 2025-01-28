@@ -1,3 +1,4 @@
+aiomcache==0.8.2
 aiomysql==0.2.0
 annotated-types==0.7.0
 anyio==4.4.0

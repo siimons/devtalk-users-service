@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     MYSQL_PASSWORD: str
     MYSQL_DATABASE: str
 
+    MEMCACHED_HOST: str = "127.0.0.1"
+    MEMCACHED_PORT: int = 11211
+    
     TESTING: bool = True
 
     model_config = ConfigDict(env_file=".env", extra="ignore")
