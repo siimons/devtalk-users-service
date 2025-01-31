@@ -1,6 +1,8 @@
+import json
 from fastapi import HTTPException, status
 
 from app.core.database import Database
+from app.api.cache.memcached_manager import CacheManager
 from app.api.v1.crud import create_user, get_user_by_id
 
 from app.api.v1.schemas import (
@@ -43,14 +45,24 @@ class UserService:
                 detail="Ошибка при регистрации пользователя."
             )
 
-    async def get_user(self, db: Database, user_id: int) -> dict:
+    async def get_user(self, db: Database, cache: CacheManager, user_id: int) -> dict:
         """
         Получение информации о пользователе по его ID.
         """
+        cache_key = f"user:{user_id}"
+        
         try:
-            logger.info(f"Запрос данных пользователя с ID {user_id}.")
+            cached_user = await cache.get(cache_key)
+            if cached_user:
+                logger.info(f"Пользователь {user_id} найден в кэше.")
+                return json.loads(cached_user)
+
+            logger.info(f"Запрос данных пользователя с ID {user_id} из БД.")
             user = await get_user_by_id(db, user_id)
-            logger.success(f"Данные пользователя с ID {user_id} успешно получены.")
+
+            await cache.set(cache_key, json.dumps(user), expire=600)
+            logger.success(f"Данные пользователя {user_id} закэшированы на 10 минут.")
+            
             return user
         except UserNotFoundException:
             raise user_not_found_exception(user_id)

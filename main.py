@@ -1,22 +1,14 @@
 import uvicorn
 from fastapi import FastAPI
-from contextlib import asynccontextmanager
 
 from app.api.v1.views import router
-from app.core.dependencies import db
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Настройка жизненного цикла приложения.
-    """
-    await db.connect()
-    yield
-    await db.close()
+from app.core.dependencies import lifespan
 
 
 def create_application() -> FastAPI:
+    """
+    Создаёт экземпляр FastAPI-приложения.
+    """
     app = FastAPI(
         title="Dev Talk API - Users",
         description="RESTful API for managing users",

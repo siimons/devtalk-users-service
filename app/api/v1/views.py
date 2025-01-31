@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status
 
 from app.core.database import Database
-from app.core.dependencies import get_database
+from app.api.cache.memcached_manager import CacheManager
+from app.core.dependencies import get_database, get_cache
 from app.api.v1.services import UserService
 
 from app.api.v1.schemas import (
@@ -32,11 +33,12 @@ async def create_user_endpoint(
 @router.get("/users/{user_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_user_endpoint(
     user_id: int,
-    db: Database = Depends(get_database)
+    db: Database = Depends(get_database),
+    cache: CacheManager = Depends(get_cache)
 ):
     """
     Получение информации о пользователе по его ID.
     ---
     - **user_id**: Уникальный идентификатор пользователя.
     """
-    return await user_service.get_user(db, user_id)
+    return await user_service.get_user(db, cache, user_id)

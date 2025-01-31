@@ -1,22 +1,10 @@
 import pytest
 import pytest_asyncio
+from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-
 from app.api.v1.views import router
-from app.core.dependencies import db
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Настройка жизненного цикла приложения для тестов.
-    """
-    await db.connect()
-    yield
-    await db.close()
+from app.core.dependencies import db, lifespan
 
 
 @pytest.fixture
