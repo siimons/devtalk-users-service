@@ -3,7 +3,7 @@ from app.api.v1.schemas import UserCreate
 from app.api.v1.exceptions import UserAlreadyExistsException, UserNotFoundException
 
 from app.core.logging import logger
-from app.api.common.utils import hash_password
+from app.api.common.hashing import hash_password
 
 async def create_user(db: Database, user: UserCreate) -> dict:
     """
