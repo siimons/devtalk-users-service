@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Response, Depends, status
 
 from app.core.database import Database
 from app.api.cache.memcached_manager import CacheManager
+
 from app.core.dependencies import get_database, get_cache
+from app.api.common.auth import get_current_user
 from app.api.v1.services import UserService
 
 from app.api.v1.schemas import (
-    UserCreate,
+    UserRegister,
     UserLogin,
     UserUpdate,
     UserDelete,
@@ -16,29 +18,57 @@ from app.api.v1.schemas import (
 router = APIRouter()
 user_service = UserService()
 
-@router.post("/users", response_model=dict, status_code=status.HTTP_201_CREATED)
-async def create_user_endpoint(
-    user_data: UserCreate,
+
+@router.post("/auth/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def register_user_endpoint(
+    user_data: UserRegister,
     db: Database = Depends(get_database)
 ):
     """
-    Создание нового пользователя.
-    ---
-    - **email**: Электронная почта нового пользователя.
-    - **username**: Имя пользователя.
-    - **password**: Пароль пользователя.
+    Регистрация нового пользователя.
     """
     return await user_service.register_user(db, user_data)
 
-@router.get("/users/{user_id}", response_model=dict, status_code=status.HTTP_200_OK)
+
+@router.post("/auth/login", response_model=dict, status_code=status.HTTP_200_OK)
+async def login_user_endpoint(
+    response: Response,
+    user_data: UserLogin,
+    db: Database = Depends(get_database)
+):
+    """
+    Аутентификация пользователя и установка JWT-токенов в cookies.
+    """
+    tokens = await user_service.login_user(db, user_data.email, user_data.password)
+
+    response.set_cookie(
+        key="access_token",
+        value=tokens["access_token"],
+        httponly=True,
+        secure=True,
+        samesite="Strict",
+    )
+
+    return {"message": "Аутентификация прошла успешно"}
+
+
+@router.post("/auth/logout", response_model=dict, status_code=status.HTTP_200_OK)
+async def logout_user_endpoint(response: Response):
+    """
+    Выход пользователя из системы. Удаляет JWT-токены из cookies.
+    """
+    response.delete_cookie(key="access_token")
+
+    return {"message": "Пользователь успешно вышел из системы"}
+
+
+@router.get("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_user_endpoint(
-    user_id: int,
+    user: User = Depends(get_current_user),
     db: Database = Depends(get_database),
     cache: CacheManager = Depends(get_cache)
 ):
     """
-    Получение информации о пользователе по его ID.
-    ---
-    - **user_id**: Уникальный идентификатор пользователя.
+    Получение данных текущего пользователя.
     """
-    return await user_service.get_user(db, cache, user_id)
+    return await user_service.get_user(db, cache, user)

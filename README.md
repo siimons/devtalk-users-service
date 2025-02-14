@@ -81,8 +81,9 @@ dev-talk-users/
 
 ### CRUD
 
-- POST `/api/v1/users` — создание нового пользователя.
-- POST `/api/v1/auth/login` — вход пользователя в систему (аутентификация).
-- GET `/api/v1/users/{user_id}` — получение информации о пользователе по его ID.
-- PUT `/api/v1/users/{user_id}` — обновление информации о пользователе.
-- DELETE `/api/v1/users/{user_id}` — удаление пользователя.
+- POST `/api/v1/auth/register` — регистрация нового пользователя.
+- POST `/api/v1/auth/login` — аутентификация пользователя, получение `access` и `refresh` токенов.
+- POST `/api/v1/auth/logout` — выход пользователя из системы.
+- GET `/api/v1/users/current` — получить данные текущего пользователя.
+- PUT `/api/v1/users/current` — обновить данные текущего пользователя.
+- DELETE `/api/v1/users/current` — удалить свой аккаунт.

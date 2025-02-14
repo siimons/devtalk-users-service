@@ -13,9 +13,9 @@ class UserBase(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
 
-class UserCreate(UserBase):
+class UserRegister(UserBase):
     """
-    Схема для создания нового пользователя.
+    Схема для регистрации нового пользователя.
     """
     password: str = Field(..., min_length=8, description="Пароль пользователя")
 
@@ -52,6 +52,6 @@ class User(BaseModel):
     """
     id: int = Field(..., description="Уникальный идентификатор пользователя")
     username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя")
-    email: EmailStr = Field(..., description="Email пользователя")
+    id: EmailStr = Field(..., description="Email пользователя")
     created_at: datetime = Field(..., description="Дата и время создания пользователя")
     updated_at: Optional[datetime] = Field(None, description="Дата и время последнего обновления пользователя")
