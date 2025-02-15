@@ -25,6 +25,7 @@ dev-talk-users/
 │   │   │   └── memcached_manager.py
 │   │   └── common/
 │   │       ├── __init__.py
+│   │       ├── auth.py
 │   │       ├── hashing.py
 │   │       └── jwt_manager.py
 │   ├── core/

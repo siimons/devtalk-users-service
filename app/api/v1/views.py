@@ -45,8 +45,17 @@ async def login_user_endpoint(
         key="access_token",
         value=tokens["access_token"],
         httponly=True,
-        secure=True,
-        samesite="Strict",
+        secure=False,
+        samesite="Lax",
+        max_age=3600,
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens["refresh_token"],
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=86400,
     )
 
     return {"message": "Аутентификация прошла успешно"}
@@ -58,6 +67,7 @@ async def logout_user_endpoint(response: Response):
     Выход пользователя из системы. Удаляет JWT-токены из cookies.
     """
     response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
 
     return {"message": "Пользователь успешно вышел из системы"}
 

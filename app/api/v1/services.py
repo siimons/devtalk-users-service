@@ -73,29 +73,30 @@ class UserService:
                 detail="Ошибка при входе в систему."
             )
     
-    async def get_user(self, db: Database, cache: CacheManager, user: User) -> dict:
+    async def get_user(self, db: Database, cache: CacheManager, user: dict) -> dict:
         """
         Получение информации о текущем пользователе.
         """
-        cache_key = f"user:{user.id}"
-        
+        user_id = user["id"]
+        cache_key = f"user:{user_id}"
+
         try:
             cached_user = await cache.get(cache_key)
             if cached_user:
-                logger.info(f"Пользователь {user.id} найден в кэше.")
+                logger.info(f"Пользователь {user_id} найден в кэше.")
                 return json.loads(cached_user)
 
-            logger.info(f"Запрос данных пользователя {user.id} из БД.")
-            user_data = await get_user_by_id(db, user.id)
+            logger.info(f"Запрос данных пользователя {user_id} из БД.")
+            user_data = await get_user_by_id(db, user_id)
 
             await cache.set(cache_key, json.dumps(user_data), expire=600)
-            logger.success(f"Данные пользователя {user.id} закэшированы на 10 минут.")
-            
+            logger.success(f"Данные пользователя {user_id} закэшированы на 10 минут.")
+
             return user_data
         except UserNotFoundException:
-            raise user_not_found_exception(user.id)
+            raise user_not_found_exception(user_id)
         except Exception as e:
-            logger.error(f"Ошибка при получении данных пользователя {user.id}: {e}")
+            logger.error(f"Ошибка при получении данных пользователя {user_id}: {e}")
             raise HTTPException(
                 status_code=500,
                 detail="Внутренняя ошибка сервера."
