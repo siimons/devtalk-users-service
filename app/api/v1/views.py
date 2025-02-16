@@ -45,7 +45,7 @@ async def login_user_endpoint(
         key="access_token",
         value=tokens["access_token"],
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="Lax",
         max_age=3600,
     )
@@ -53,12 +53,15 @@ async def login_user_endpoint(
         key="refresh_token",
         value=tokens["refresh_token"],
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="Lax",
         max_age=86400,
     )
 
-    return {"message": "Аутентификация прошла успешно"}
+    return {
+        "access_token": tokens["access_token"],
+        "token_type": "bearer",
+    }
 
 
 @router.post("/auth/logout", response_model=dict, status_code=status.HTTP_200_OK)
@@ -69,7 +72,7 @@ async def logout_user_endpoint(response: Response):
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
 
-    return {"message": "Пользователь успешно вышел из системы"}
+    return {"message": "Вы успешно вышли из системы."}
 
 
 @router.get("/users/current", response_model=dict, status_code=status.HTTP_200_OK)

@@ -56,7 +56,7 @@ dev-talk-users/
 │   │   ├── __init__.py
 │   │   ├── api/
 │   │   │   ├── __init__.py
-│   │   │   ├── test_create_user.py
+│   │   │   ├── test_register_user.py
 │   │   │   ├── test_get_user.py
 │   │   │   ├── test_update_user.py
 │   │   │   ├── test_delete_user.py

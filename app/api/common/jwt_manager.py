@@ -37,18 +37,3 @@ def create_refresh_token(data: dict) -> str:
     to_encode.update({"exp": expire, "token_type": "refresh"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-
-def verify_token(token: str) -> Optional[dict]:
-    """
-    Проверяет JWT-токен и возвращает его данные, если он действителен.
-
-    :param token: JWT-токен.
-    :return: Раскодированные данные токена или None, если токен недействителен.
-    """
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        return None  # Токен истек
-    except jwt.InvalidTokenError:
-        return None  # Недействительный токен

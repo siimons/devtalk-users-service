@@ -5,12 +5,13 @@ from httpx import AsyncClient, ASGITransport
 
 from app.api.v1.views import router
 from app.core.dependencies import db, lifespan
+from app.api.common.hashing import hash_password
 
 
 @pytest.fixture
 def app() -> FastAPI:
     """
-    Создаёт экземпляр приложения FastAPI с подключённым роутером.
+    Создаёт экземпляр FastAPI с подключёнными роутерами.
     """
     app = FastAPI(lifespan=lifespan)
     app.include_router(router, prefix="/api/v1")
@@ -20,7 +21,7 @@ def app() -> FastAPI:
 @pytest_asyncio.fixture
 async def client(app: FastAPI):
     """
-    Асинхронный клиент для тестирования.
+    Создаёт асинхронный HTTP-клиент для тестирования API.
     """
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
@@ -30,32 +31,79 @@ async def client(app: FastAPI):
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_database():
     """
-    Фикстура для подготовки базы данных перед каждым тестом.
+    Очищает тестовую базу данных перед каждым тестом.
     """
     await db.connect()
     async with db.pool.acquire() as connection:
         async with connection.cursor() as cursor:
             await cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+
             tables = ["users", "articles", "tags", "article_tags", "comments"]
             for table in tables:
                 await cursor.execute(f"TRUNCATE TABLE {table};")
+
             await cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+
     yield
     await db.close()
 
 
 @pytest_asyncio.fixture
-async def create_test_user():
+async def get_test_user_payload():
     """
-    Фикстура для создания тестового пользователя в базе данных.
+    Возвращает тестовые данные пользователя.
+    """
+    return {
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "securepassword123"
+    }
+
+
+@pytest_asyncio.fixture
+async def create_test_user(get_test_user_payload):
+    """
+    Создаёт тестового пользователя в базе данных и возвращает его.
     """
     query = """
         INSERT INTO users (username, email, password)
         VALUES (%s, %s, %s)
     """
-    args = ("testuser", "test@example.com", "hashedpassword")
+    hashed_password = hash_password(get_test_user_payload["password"])
+    args = (
+        get_test_user_payload["username"],
+        get_test_user_payload["email"],
+        hashed_password,
+    )
+    
     user_id = await db.execute(query, *args)
 
     query = "SELECT id, username, email FROM users WHERE id = %s"
-    user = await db.fetch(query, user_id)
+    user = await db.fetch(query, (user_id,))
+
     return user[0]
+
+
+@pytest_asyncio.fixture
+async def authenticate_test_user(client: AsyncClient, get_test_user_payload, create_test_user):
+    """
+    Аутентифицирует тестового пользователя и возвращает JWT-токены в cookies.
+    """
+    login_payload = {
+        "email": get_test_user_payload["email"],
+        "password": get_test_user_payload["password"],
+    }
+    response = await client.post("/api/v1/auth/login", json=login_payload)
+
+    assert response.status_code == 200, f"Ошибка авторизации: {response.text}"
+
+    return response.cookies
+
+
+@pytest_asyncio.fixture
+async def auth_client(client: AsyncClient, authenticate_test_user):
+    """
+    Возвращает HTTP-клиент с авторизацией через cookies.
+    """
+    client.cookies.update(authenticate_test_user)
+    return client
