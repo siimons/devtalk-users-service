@@ -103,7 +103,12 @@ async def authenticate_test_user(client: AsyncClient, get_test_user_payload, cre
 @pytest_asyncio.fixture
 async def auth_client(client: AsyncClient, authenticate_test_user):
     """
-    Возвращает HTTP-клиент с авторизацией через cookies.
+    Возвращает HTTP-клиент с авторизацией через cookies и заголовок Authorization.
     """
     client.cookies.update(authenticate_test_user)
+    
+    access_token = authenticate_test_user.get("access_token")
+    if access_token:
+        client.headers.update({"Authorization": f"Bearer {access_token}"})
+    
     return client
