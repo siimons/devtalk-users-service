@@ -39,7 +39,7 @@ async def login_user_endpoint(
     """
     Аутентификация пользователя и установка JWT-токенов в cookies.
     """
-    tokens = await user_service.login_user(db, user_data.email, user_data.password)
+    tokens = await user_service.login_user(db, user_data)
 
     response.set_cookie(
         key="access_token",
@@ -64,15 +64,17 @@ async def login_user_endpoint(
     }
 
 
-@router.post("/auth/logout", response_model=dict, status_code=status.HTTP_200_OK)
-async def logout_user_endpoint(response: Response):
+@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_user_endpoint():
     """
     Выход пользователя из системы. Удаляет JWT-токены из cookies.
     """
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
 
-    return {"message": "Вы успешно вышли из системы."}
+    return response
 
 
 @router.get("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
@@ -85,3 +87,15 @@ async def get_user_endpoint(
     Получение данных текущего пользователя.
     """
     return await user_service.get_user(db, cache, user)
+
+
+@router.put("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
+async def update_user_endpoint(
+    user_update: UserUpdate,
+    user: User = Depends(get_current_user),
+    db: Database = Depends(get_database)
+):
+    """
+    Полностью обновляет данные текущего пользователя.
+    """
+    return await user_service.update_user(db, user, user_update)

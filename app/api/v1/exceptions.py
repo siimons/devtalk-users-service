@@ -37,7 +37,7 @@ class UserUpdateException(UserBaseException):
     """Исключение для ошибки при обновлении информации о пользователе"""
     
     def __init__(self, user_id: int):
-        message = f"Ошибка при обновлении информации о пользователе с ID {user_id}."
+        message = f"Ошибка при обновлении данных пользователя с ID {user_id}."
         super().__init__(message)
 
 
@@ -79,7 +79,7 @@ def user_update_exception(user_id: int):
     """Обрабатывает исключение при ошибке обновления информации о пользователе"""
     return HTTPException(
         status_code=500,
-        detail=f"Ошибка при обновлении информации о пользователе с ID {user_id}."
+        detail=f"Ошибка при обновлении данных пользователя с ID {user_id}."
     )
 
 
