@@ -32,6 +32,7 @@ class UserUpdate(BaseModel):
     """
     Схема для обновления информации о пользователе.
     """
+    current_password: Optional[str] = Field(None, min_length=8, description="Текущий пароль")
     username: Optional[str] = Field(None, min_length=3, max_length=50, description="Обновлённое имя пользователя")
     email: Optional[EmailStr] = Field(None, description="Обновлённый email пользователя")
     password: Optional[str] = Field(None, min_length=8, description="Обновлённый пароль пользователя")

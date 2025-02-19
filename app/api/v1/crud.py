@@ -1,4 +1,5 @@
 from app.core.database import Database
+from app.api.cache.memcached_manager import CacheManager
 
 from app.api.v1.schemas import (
     UserRegister,
@@ -11,7 +12,9 @@ from app.api.v1.exceptions import (
     UserNotFoundException,
     UserAlreadyExistsException,
     InvalidCredentialsException,
-    UserUpdateException
+    UserUpdateException,
+    TooManyRequestsException,
+    UserDeletionException
 )
 
 from app.core.logging import logger
@@ -80,27 +83,49 @@ async def get_user_by_id(db: Database, user_id: int) -> dict:
         raise
 
 
-async def update_user_in_db(db: Database, user_id: int, user_data: UserUpdate) -> dict:
+async def update_user_in_db(db: Database, cache: CacheManager, user_id: int, user_data: UserUpdate) -> dict:
     """
-    Полностью обновляет данные пользователя (заменяет все поля, кроме пароля, если он не передан).
+    Обновляет данные пользователя. Требует текущий пароль для изменения email или пароля.
     """
-    user_query = "SELECT id, password FROM users WHERE id = %s"
+    user_query = "SELECT id, email, password FROM users WHERE id = %s"
     user = await db.fetch(user_query, user_id)
 
     if not user:
         raise UserNotFoundException(user_id)
 
-    email_check_query = "SELECT id FROM users WHERE email = %s AND id != %s"
-    existing_user = await db.fetch(email_check_query, user_data.email, user_id)
+    user = user[0]
 
-    if existing_user:
-        raise UserAlreadyExistsException(user_data.email)
+    brute_force_key = f"brute_force_user_{user_id}"
 
-    hashed_password = hash_password(user_data.password) if user_data.password else user[0]["password"]
+    if user_data.email or user_data.password:
+        if not user_data.current_password:
+            raise InvalidCredentialsException("Для смены email или пароля требуется текущий пароль.")
+
+        failed_attempts = await cache.get(brute_force_key)
+        if failed_attempts and int(failed_attempts) >= 5:
+            raise TooManyRequestsException(1800)
+
+        if not verify_password(user_data.current_password, user["password"]):
+            attempts = await cache.increment(brute_force_key, expire=1800)
+            logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
+            raise InvalidCredentialsException("Текущий пароль введён неверно.")
+
+        await cache.delete(brute_force_key)
+
+    if user_data.email and user_data.email != user["email"]:
+        email_check_query = "SELECT id FROM users WHERE email = %s AND id != %s"
+        existing_user = await db.fetch(email_check_query, user_data.email, user_id)
+
+        if existing_user:
+            raise UserAlreadyExistsException(user_data.email)
+
+    hashed_password = hash_password(user_data.password) if user_data.password else user["password"]
 
     update_query = """
     UPDATE users 
-    SET username = %s, email = %s, password = %s
+    SET username = COALESCE(%s, username), 
+        email = COALESCE(%s, email), 
+        password = %s
     WHERE id = %s
     """
     try:
@@ -109,10 +134,9 @@ async def update_user_in_db(db: Database, user_id: int, user_data: UserUpdate) -
         logger.success(f"Пользователь с ID {user_id} успешно обновлён.")
         return {
             "id": user_id,
-            "username": user_data.username,
-            "email": user_data.email,
+            "username": user_data.username or user["username"],
+            "email": user_data.email or user["email"],
         }
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обновлении пользователя с ID {user_id}: {e}")
         raise UserUpdateException(user_id)
-    

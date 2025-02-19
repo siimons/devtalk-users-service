@@ -41,6 +41,15 @@ class UserUpdateException(UserBaseException):
         super().__init__(message)
 
 
+class TooManyRequestsException(UserBaseException):
+    """Исключение для защиты от частых запросов (Brute Force)"""
+    
+    def __init__(self, retry_after: int):
+        message = f"Слишком много запросов. Попробуйте снова через {retry_after} секунд."
+        self.retry_after = retry_after
+        super().__init__(message)
+
+
 class UserDeletionException(UserBaseException):
     """Исключение для ошибки удаления пользователя"""
     
@@ -80,6 +89,15 @@ def user_update_exception(user_id: int):
     return HTTPException(
         status_code=500,
         detail=f"Ошибка при обновлении данных пользователя с ID {user_id}."
+    )
+
+
+def too_many_requests_exception(retry_after: int):
+    """Обрабатывает исключение при превышении лимита запросов"""
+    return HTTPException(
+        status_code=429,
+        detail=f"Слишком много запросов. Попробуйте снова через {retry_after} секунд.",
+        headers={"Retry-After": str(retry_after)}
     )
 
 

@@ -84,18 +84,26 @@ async def get_user_endpoint(
     cache: CacheManager = Depends(get_cache)
 ):
     """
-    Получение данных текущего пользователя.
+    Получить данные текущего пользователя.
     """
     return await user_service.get_user(db, cache, user)
 
 
-@router.put("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
+@router.patch("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_user_endpoint(
+    response: Response,
     user_update: UserUpdate,
     user: User = Depends(get_current_user),
-    db: Database = Depends(get_database)
+    db: Database = Depends(get_database),
+    cache: CacheManager = Depends(get_cache)
 ):
     """
-    Полностью обновляет данные текущего пользователя.
+    Обновить данные текущего пользователя.
     """
-    return await user_service.update_user(db, user, user_update)
+    updated_user = await user_service.update_user(db, cache, user, user_update)
+
+    if user_update.password:
+        response.delete_cookie(key="access_token")
+        response.delete_cookie(key="refresh_token")
+
+    return updated_user

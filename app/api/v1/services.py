@@ -23,10 +23,12 @@ from app.api.v1.exceptions import (
     UserAlreadyExistsException,
     InvalidCredentialsException,
     UserUpdateException,
+    TooManyRequestsException,
     user_not_found_exception,
     user_already_exists_exception,
     invalid_credentials_exception,
-    user_update_exception
+    user_update_exception,
+    too_many_requests_exception
 )
 
 from app.core.logging import logger
@@ -78,7 +80,7 @@ class UserService:
     
     async def get_user(self, db: Database, cache: CacheManager, user: dict) -> dict:
         """
-        Получение информации о текущем пользователе.
+        Получает данные текущего пользователя.
         """
         user_id = user["id"]
         cache_key = f"user:{user_id}"
@@ -106,29 +108,41 @@ class UserService:
                 detail="Внутренняя ошибка сервера."
             )
 
-    async def update_user(self, db: Database, user: dict, user_data: UserUpdate) -> dict:
+    async def update_user(self, db: Database, cache: CacheManager, user: dict, user_data: UserUpdate) -> dict:
         """
-        Полностью обновляет данные текущего пользователя.
+        Обновляет данные текущего пользователя.
         """
         user_id = user["id"]
         
         try:
-            updated_user = await update_user_in_db(db, user_id, user_data)
+            updated_user = await update_user_in_db(db, cache, user_id, user_data)
             logger.success(f"Пользователь {user_id} успешно обновлён.")
-            
             return updated_user
+        
         except UserNotFoundException:
             logger.error(f"Пользователь с ID {user_id} не найден.")
             raise user_not_found_exception(user_id)
+        
         except UserAlreadyExistsException:
             logger.error(f"Email {user_data.email} уже занят другим пользователем.")
             raise user_already_exists_exception(user_data.email)
+        
+        except InvalidCredentialsException:
+            logger.warning(f"Ошибка верификации пароля у пользователя с ID {user_id}.")
+            raise invalid_credentials_exception()
+        
         except UserUpdateException:
             logger.error(f"Ошибка при обновлении пользователя с ID {user_id}.")
             raise user_update_exception(user_id)
+        
+        except TooManyRequestsException as e:
+            logger.warning(f"Слишком много неудачных попыток смены пароля у пользователя {user_id}. Блокировка на {e.retry_after} секунд.")
+            raise too_many_requests_exception(e.retry_after)
+        
         except Exception as e:
             logger.error(f"Внутренняя ошибка сервера: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Ошибка при обновлении данных пользователя.",
             )
+            

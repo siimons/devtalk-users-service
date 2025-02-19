@@ -73,3 +73,17 @@ class CacheManager:
             logger.info(f"Ключ {key} удалён из кэша.")
         except Exception as e:
             logger.error(f"Ошибка при удалении ключа {key} из кэша: {e}")
+    
+    async def increment(self, key: str, expire: int = 1800) -> int:
+        """
+        Увеличить значение ключа в кэше.
+        """
+        try:
+            value = await self.client.incr(key.encode("utf-8"), 1)
+            return value
+        except aiomcache.exceptions.ClientException:
+            await self.set(key, "1", expire)
+            return 1
+        except Exception as e:
+            logger.error(f"Ошибка при увеличении значения ключа {key}: {e}")
+            return 0
