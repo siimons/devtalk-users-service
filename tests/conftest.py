@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 
 from app.api.v1.views import router
-from app.core.dependencies import db, lifespan
+from app.core.dependencies import db, cache, lifespan
 from app.api.common.hashing import hash_password
 
 
@@ -46,6 +46,17 @@ async def setup_database():
 
     yield
     await db.close()
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def setup_cache():
+    """
+    Очищает кэш перед каждым тестом.
+    """
+    await cache.connect()
+    await cache.client.flush_all()
+    yield
+    await cache.close()
 
 
 @pytest_asyncio.fixture

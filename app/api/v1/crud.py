@@ -99,7 +99,7 @@ async def update_user_in_db(db: Database, cache: CacheManager, user_id: int, use
 
     if user_data.email or user_data.password:
         if not user_data.current_password:
-            raise InvalidCredentialsException("Для смены email или пароля требуется текущий пароль.")
+            raise InvalidCredentialsException()
 
         failed_attempts = await cache.get(brute_force_key)
         if failed_attempts and int(failed_attempts) >= 5:
@@ -108,7 +108,7 @@ async def update_user_in_db(db: Database, cache: CacheManager, user_id: int, use
         if not verify_password(user_data.current_password, user["password"]):
             attempts = await cache.increment(brute_force_key, expire=1800)
             logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
-            raise InvalidCredentialsException("Текущий пароль введён неверно.")
+            raise InvalidCredentialsException()
 
         await cache.delete(brute_force_key)
 
