@@ -17,34 +17,36 @@ class UserRegister(UserBase):
     """
     Схема для регистрации нового пользователя.
     """
-    password: str = Field(..., min_length=8, description="Пароль пользователя")
+    password: str = Field(..., min_length=8, description="Пароль пользователя для регистрации")
 
 
 class UserLogin(BaseModel):
     """
-    Схема для входа пользователя в систему.
+    Схема для аутентификации пользователя.
     """
     email: EmailStr = Field(..., description="Email пользователя для входа")
-    password: str = Field(..., min_length=8, description="Пароль пользователя")
+    password: str = Field(..., min_length=8, description="Пароль пользователя для входа")
 
 
 class UserUpdate(BaseModel):
     """
-    Схема для обновления информации о пользователе.
+    Схема для обновления данных пользователя.
     """
-    current_password: Optional[str] = Field(None, min_length=8, description="Текущий пароль")
-    username: Optional[str] = Field(None, min_length=3, max_length=50, description="Обновлённое имя пользователя")
-    email: Optional[EmailStr] = Field(None, description="Обновлённый email пользователя")
-    password: Optional[str] = Field(None, min_length=8, description="Обновлённый пароль пользователя")
+    current_password: Optional[str] = Field(None, min_length=8, description="Текущий пароль для подтверждения изменений")
+    username: Optional[str] = Field(None, min_length=3, max_length=50, description="Новое имя пользователя")
+    email: Optional[EmailStr] = Field(None, description="Новый email пользователя")
+    password: Optional[str] = Field(None, min_length=8, description="Новый пароль пользователя")
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class UserDelete(BaseModel):
     """
-    Схема для удаления пользователя.
+    Схема для удаления аккаунта пользователя.
     """
-    id: int = Field(..., description="ID пользователя для удаления")
+    current_password: str = Field(..., min_length=8, description="Текущий пароль для подтверждения удаления")
+
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class User(BaseModel):
@@ -53,6 +55,6 @@ class User(BaseModel):
     """
     id: int = Field(..., description="Уникальный идентификатор пользователя")
     username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя")
-    id: EmailStr = Field(..., description="Email пользователя")
-    created_at: datetime = Field(..., description="Дата и время создания пользователя")
-    updated_at: Optional[datetime] = Field(None, description="Дата и время последнего обновления пользователя")
+    email: EmailStr = Field(..., description="Email пользователя")
+    created_at: datetime = Field(..., description="Дата и время создания аккаунта")
+    updated_at: Optional[datetime] = Field(None, description="Дата и время последнего обновления данных пользователя")
