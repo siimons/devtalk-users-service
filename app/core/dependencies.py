@@ -1,7 +1,12 @@
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
+from fastapi import Depends
 
 from app.core.database import Database
 from app.api.cache.memcached_manager import CacheManager
+from app.api.v1.repositories import UserRepository
+from app.api.v1.services import UserService
 
 db = Database()
 cache = CacheManager()
@@ -10,6 +15,9 @@ cache = CacheManager()
 async def get_database() -> Database:
     """
     Dependency для получения объекта базы данных.
+
+    Returns:
+        Database: Объект базы данных.
     """
     if not db.pool:
         await db.connect()
@@ -19,19 +27,60 @@ async def get_database() -> Database:
 async def get_cache() -> CacheManager:
     """
     Dependency для получения объекта кэша.
+
+    Returns:
+        CacheManager: Объект кэша.
     """
     if not cache.client:
         await cache.connect()
     return cache
 
 
+async def get_user_repository(
+    db: Database = Depends(get_database)
+) -> UserRepository:
+    """
+    Dependency для получения репозитория пользователей.
+
+    Args:
+        db (Database): Объект базы данных.
+
+    Returns:
+        UserRepository: Репозиторий пользователей.
+    """
+    return UserRepository(db)
+
+
+async def get_user_service(
+    user_repo: UserRepository = Depends(get_user_repository)
+) -> UserService:
+    """
+    Dependency для получения сервиса пользователей.
+
+    Args:
+        user_repo (UserRepository): Репозиторий пользователей.
+
+    Returns:
+        UserService: Сервис пользователей.
+    """
+    return UserService(user_repo)
+
+
 @asynccontextmanager
-async def lifespan(app):
+async def lifespan(app) -> AsyncGenerator[None, None]:
     """
     Настройка жизненного цикла приложения.
+
+    Args:
+        app: FastAPI-приложение.
+
+    Yields:
+        None: Управление жизненным циклом.
     """
     await db.connect()
     await cache.connect()
+
     yield
+
     await db.close()
     await cache.close()

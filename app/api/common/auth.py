@@ -4,9 +4,8 @@ from jose.exceptions import JWTError, ExpiredSignatureError
 from fastapi import Request, HTTPException, status, Depends
 from datetime import datetime, timezone
 
-from app.api.v1.crud import get_user_by_id
-from app.core.dependencies import get_database
-from app.core.database import Database
+from app.core.dependencies import get_user_repository
+from app.api.v1.repositories import UserRepository
 from app.core.config import settings
 
 
@@ -36,13 +35,13 @@ def get_token(request: Request) -> str:
 
 async def get_current_user(
     token: str = Depends(get_token),
-    db: Database = Depends(get_database),
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """
     Проверяет валидность JWT access-токена и возвращает данные пользователя.
 
     :param token: JWT-токен, полученный из cookie или заголовка Authorization.
-    :param db: Экземпляр базы данных.
+    :param user_repo: Репозиторий пользователей.
     :return: Данные пользователя.
     :raises HTTPException: Если токен невалидный, истек, либо пользователь не найден.
     """
@@ -69,7 +68,7 @@ async def get_current_user(
                 detail="User ID not found in token",
             )
 
-        user = await get_user_by_id(db, int(user_id))
+        user = await user_repo.get_user_by_id(int(user_id))
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

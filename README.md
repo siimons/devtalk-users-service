@@ -18,7 +18,7 @@ dev-talk-users/
 │   │   │   ├── exceptions.py
 │   │   │   ├── schemas.py
 │   │   │   ├── views.py
-│   │   │   ├── crud.py
+│   │   │   ├── repositories.py
 │   │   │   └── services.py
 │   │   ├── cache/
 │   │   │   ├── __init__.py

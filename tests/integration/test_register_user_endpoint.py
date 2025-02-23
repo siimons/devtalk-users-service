@@ -35,5 +35,5 @@ async def test_register_user_duplicate_email(client: AsyncClient, create_test_us
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST, f"Ошибка: {response.text}"
     assert response.json() == {
-        "detail": f'Пользователь с email "{create_test_user["email"]}" уже существует.'
+        "detail": f"Пользователь с email {create_test_user["email"]} уже существует."
     }

@@ -1,109 +1,60 @@
 from fastapi import HTTPException
 
-
-class UserBaseException(Exception):
-    """Базовое исключение для всех ошибок, связанных с пользователями"""
-    
-    def __init__(self, message: str):
+class ServiceException(Exception):
+    """Базовый класс для всех исключений сервиса"""
+    def __init__(self, message: str, code: int):
         self.message = message
-        super().__init__(self.message)
+        self.code = code
+        super().__init__(message)
+
+    def to_http(self):
+        """Преобразует исключение в HTTPException"""
+        return HTTPException(status_code=self.code, detail=self.message)
 
 
-class UserNotFoundException(UserBaseException):
+class UserNotFoundException(ServiceException):
     """Исключение для ситуации, когда пользователь не найден"""
-    
     def __init__(self, user_id: int):
-        message = f"Пользователь с ID {user_id} не найден."
-        super().__init__(message)
+        super().__init__(f"Пользователь с ID {user_id} не найден.", 404)
 
 
-class UserAlreadyExistsException(UserBaseException):
+class UserAlreadyExistsException(ServiceException):
     """Исключение для ситуации, когда пользователь с таким email уже существует"""
-    
     def __init__(self, email: str):
-        message = f"Пользователь с email \"{email}\" уже существует."
-        super().__init__(message)
+        super().__init__(f"Пользователь с email {email} уже существует.", 400)
 
 
-class InvalidCredentialsException(UserBaseException):
+class InvalidCredentialsException(ServiceException):
     """Исключение для недействительных учетных данных"""
-    
     def __init__(self):
-        message = "Неверный email или пароль."
-        super().__init__(message)
+        super().__init__("Неверный email или пароль.", 401)
 
 
-class UserUpdateException(UserBaseException):
+class UserUpdateException(ServiceException):
     """Исключение для ошибки при обновлении информации о пользователе"""
-    
     def __init__(self, user_id: int):
-        message = f"Ошибка при обновлении данных пользователя с ID {user_id}."
-        super().__init__(message)
+        super().__init__(f"Ошибка при обновлении данных пользователя с ID {user_id}.", 500)
 
 
-class TooManyRequestsException(UserBaseException):
+class TooManyRequestsException(ServiceException):
     """Исключение для защиты от частых запросов (Brute Force)"""
-    
     def __init__(self, retry_after: int):
-        message = f"Слишком много запросов. Попробуйте снова через {retry_after} секунд."
+        super().__init__(
+            f"Слишком много запросов. Попробуйте снова через {retry_after} секунд.",
+            429
+        )
         self.retry_after = retry_after
-        super().__init__(message)
+
+    def to_http(self):
+        """Переопределяет метод для добавления заголовка Retry-After"""
+        return HTTPException(
+            status_code=self.code,
+            detail=self.message,
+            headers={"Retry-After": str(self.retry_after)}
+        )
 
 
-class UserDeletionException(UserBaseException):
+class UserDeletionException(ServiceException):
     """Исключение для ошибки удаления пользователя"""
-    
     def __init__(self, user_id: int):
-        message = f"Ошибка при удалении пользователя с ID {user_id}."
-        super().__init__(message)
-
-
-# HTTPException генераторы
-
-def user_not_found_exception(user_id: int):
-    """Обрабатывает исключение, когда пользователь не найден"""
-    return HTTPException(
-        status_code=404,
-        detail=f"Пользователь с ID {user_id} не найден."
-    )
-
-
-def user_already_exists_exception(email: str):
-    """Обрабатывает исключение, когда пользователь с таким email уже существует"""
-    return HTTPException(
-        status_code=400,
-        detail=f"Пользователь с email \"{email}\" уже существует."
-    )
-
-
-def invalid_credentials_exception():
-    """Обрабатывает исключение для недействительных учетных данных"""
-    return HTTPException(
-        status_code=401,
-        detail="Неверный email или пароль."
-    )
-
-
-def user_update_exception(user_id: int):
-    """Обрабатывает исключение при ошибке обновления информации о пользователе"""
-    return HTTPException(
-        status_code=500,
-        detail=f"Ошибка при обновлении данных пользователя с ID {user_id}."
-    )
-
-
-def too_many_requests_exception(retry_after: int):
-    """Обрабатывает исключение при превышении лимита запросов"""
-    return HTTPException(
-        status_code=429,
-        detail=f"Слишком много запросов. Попробуйте снова через {retry_after} секунд.",
-        headers={"Retry-After": str(retry_after)}
-    )
-
-
-def user_deletion_exception(user_id: int):
-    """Обрабатывает исключение при ошибке удаления пользователя"""
-    return HTTPException(
-        status_code=500,
-        detail=f"Ошибка при удалении пользователя с ID {user_id}."
-    )
+        super().__init__(f"Ошибка при удалении пользователя с ID {user_id}.", 500)
