@@ -1,12 +1,12 @@
-from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import Optional
 from datetime import datetime
 
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
+
 
 class UserBase(BaseModel):
-    """
-    Базовая схема для пользователя.
-    """
+    """Базовая схема для пользователя."""
+    
     username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя")
     email: EmailStr = Field(..., description="Email пользователя")
 
@@ -14,24 +14,21 @@ class UserBase(BaseModel):
 
 
 class UserRegister(UserBase):
-    """
-    Схема для регистрации нового пользователя.
-    """
+    """Схема для регистрации нового пользователя."""
+    
     password: str = Field(..., min_length=8, description="Пароль пользователя для регистрации")
 
 
 class UserLogin(BaseModel):
-    """
-    Схема для аутентификации пользователя.
-    """
+    """Схема для аутентификации пользователя."""
+    
     email: EmailStr = Field(..., description="Email пользователя для входа")
     password: str = Field(..., min_length=8, description="Пароль пользователя для входа")
 
 
 class UserUpdate(BaseModel):
-    """
-    Схема для обновления данных пользователя.
-    """
+    """Схема для обновления данных пользователя."""
+    
     current_password: Optional[str] = Field(None, min_length=8, description="Текущий пароль для подтверждения изменений")
     username: Optional[str] = Field(None, min_length=3, max_length=50, description="Новое имя пользователя")
     email: Optional[EmailStr] = Field(None, description="Новый email пользователя")
@@ -41,18 +38,16 @@ class UserUpdate(BaseModel):
 
 
 class UserDelete(BaseModel):
-    """
-    Схема для удаления аккаунта пользователя.
-    """
+    """Схема для удаления аккаунта пользователя."""
+    
     current_password: str = Field(..., min_length=8, description="Текущий пароль для подтверждения удаления")
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class User(BaseModel):
-    """
-    Схема для получения информации о пользователе.
-    """
+    """Схема для получения информации о пользователе."""
+    
     id: int = Field(..., description="Уникальный идентификатор пользователя")
     username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя")
     email: EmailStr = Field(..., description="Email пользователя")

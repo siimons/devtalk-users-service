@@ -13,9 +13,14 @@ def get_token(request: Request) -> str:
     """
     Извлекает JWT access-токен из cookie или заголовка Authorization.
 
-    :param request: HTTP-запрос.
-    :return: Строка access-токена.
-    :raises HTTPException: Если токен отсутствует.
+    Args:
+        request (Request): HTTP-запрос.
+
+    Returns:
+        str: Строка access-токена.
+
+    Raises:
+        HTTPException: Если токен отсутствует.
     """
     token = request.cookies.get("access_token")
 
@@ -40,10 +45,15 @@ async def get_current_user(
     """
     Проверяет валидность JWT access-токена и возвращает данные пользователя.
 
-    :param token: JWT-токен, полученный из cookie или заголовка Authorization.
-    :param user_repo: Репозиторий пользователей.
-    :return: Данные пользователя.
-    :raises HTTPException: Если токен невалидный, истек, либо пользователь не найден.
+    Args:
+        token (str): JWT-токен, полученный из cookie или заголовка Authorization.
+        user_repo (UserRepository): Репозиторий пользователей.
+
+    Returns:
+        User: Данные пользователя.
+
+    Raises:
+        HTTPException: Если токен невалидный, истек или пользователь не найден.
     """
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

@@ -9,9 +9,12 @@ def create_access_token(data: dict, expires_delta: Optional[int] = None) -> str:
     """
     Создает JWT access-токен.
 
-    :param data: Данные, которые будут зашифрованы в токене.
-    :param expires_delta: Время жизни токена в минутах (по умолчанию из настроек).
-    :return: Строка JWT access-токена.
+    Args:
+        data (dict): Данные, которые будут зашифрованы в токене.
+        expires_delta (Optional[int]): Время жизни токена в минутах (по умолчанию из настроек).
+
+    Returns:
+        str: Строка JWT access-токена.
     """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(
@@ -29,8 +32,11 @@ def create_refresh_token(data: dict) -> str:
     """
     Создает JWT refresh-токен.
 
-    :param data: Данные, которые будут зашифрованы в токене.
-    :return: Строка JWT refresh-токена.
+    Args:
+        data (dict): Данные, которые будут зашифрованы в токене.
+
+    Returns:
+        str: Строка JWT refresh-токена.
     """
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode = data.copy()

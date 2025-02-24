@@ -1,16 +1,17 @@
 import aiomysql
 from typing import List, Optional
 
-from app.core.logging import logger
 from app.core.config import settings
+from app.core.logging import logger
 
 
 class Database:
+    
     def __init__(self):
         self.pool = None
 
     async def connect(self):
-        """Создание пула соединений с БД MySQL"""
+        """Создание пула соединений с базой данных."""
         try:
             logger.info("Подключение к базе данных...")
             logger.info(
@@ -32,7 +33,7 @@ class Database:
             raise
 
     async def close(self):
-        """Закрытие соединений с БД"""
+        """Закрытие соединений с базой данных."""
         try:
             if self.pool:
                 logger.info("Закрытие соединений с базой данных...")
@@ -43,7 +44,7 @@ class Database:
             logger.error(f"Ошибка при закрытии соединений с базой данных: {e}")
 
     async def fetch(self, query: str, *args) -> List[dict]:
-        """Выполнение запроса, возвращающего результаты (например SELECT)"""
+        """Выполнение запроса, возвращающего результаты (например SELECT)."""
         try:
             logger.info(f"Выполнение запроса: {query} | Аргументы: {args}")
             async with self.pool.acquire() as connection:
@@ -57,7 +58,7 @@ class Database:
             raise
 
     async def execute(self, query: str, *args) -> Optional[int]:
-        """Выполнение запроса без возвращаемых результатов (например INSERT, UPDATE, DELETE)"""
+        """Выполнение запроса без возвращаемых результатов (например INSERT, UPDATE, DELETE)."""
         try:
             logger.info(f"Выполнение запроса: {query} | Аргументы: {args}")
             async with self.pool.acquire() as connection:
@@ -71,14 +72,14 @@ class Database:
             raise
 
     async def start_transaction(self):
-        """Начало транзакции"""
+        """Начало транзакции."""
         logger.info("Начало транзакции...")
         async with self.pool.acquire() as connection:
             connection.autocommit(False)
             self._connection = connection
 
     async def commit_transaction(self):
-        """Фиксация транзакции"""
+        """Фиксация транзакции."""
         if hasattr(self, '_connection'):
             logger.info("Фиксация транзакции...")
             await self._connection.commit()
@@ -86,7 +87,7 @@ class Database:
             self._connection = None
 
     async def rollback_transaction(self):
-        """Откат транзакции"""
+        """Откат транзакции."""
         if hasattr(self, '_connection'):
             logger.info("Откат транзакции...")
             await self._connection.rollback()

@@ -6,9 +6,7 @@ from app.core.dependencies import lifespan
 
 
 def create_application() -> FastAPI:
-    """
-    Создаёт экземпляр FastAPI-приложения.
-    """
+    """Создаёт экземпляр FastAPI-приложения."""
     app = FastAPI(
         title="Dev Talk API - Users",
         description="RESTful API for managing users",

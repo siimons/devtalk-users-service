@@ -2,6 +2,7 @@ from app.core.database import Database
 
 
 class UserRepository:
+    
     def __init__(self, db: Database):
         self.db = db
 
