@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from app.api.v1.repositories import UserRepository
-from app.api.cache.memcached_manager import CacheManager
+from app.api.cache.redis_manager import RedisManager
 
 from app.api.v1.schemas import (
     UserRegister,
@@ -85,28 +85,28 @@ class UserService:
             logger.error(f"Ошибка при получении данных пользователя {user_id}: {e}")
             raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера.")
 
-    async def update_user(self, user_id: int, user_data: UserUpdate, cache: CacheManager) -> dict:
+    async def update_user(self, user_id: int, user_data: UserUpdate) -> dict:
         """Обновляет данные пользователя."""
         try:
             user = await self.user_repo.get_user_by_id(user_id)
             if not user:
                 raise UserNotFoundException(user_id)
 
-            brute_force_key = f"brute_force_user_{user_id}"
-            if user_data.email or user_data.password:
-                if not user_data.current_password:
-                    raise InvalidCredentialsException()
+            # brute_force_key = f"brute_force_user_{user_id}"
+            # if user_data.email or user_data.password:
+            #     if not user_data.current_password:
+            #         raise InvalidCredentialsException()
 
-                failed_attempts = await cache.get(brute_force_key)
-                if failed_attempts and int(failed_attempts) >= 5:
-                    raise TooManyRequestsException(1800)
+            #     failed_attempts = await cache.get(brute_force_key)
+            #     if failed_attempts and int(failed_attempts) >= 5:
+            #         raise TooManyRequestsException(1800)
 
-                if not verify_password(user_data.current_password, user["password"]):
-                    attempts = await cache.increment(brute_force_key, expire=1800)
-                    logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
-                    raise InvalidCredentialsException()
+            #     if not verify_password(user_data.current_password, user["password"]):
+            #         attempts = await cache.increment(brute_force_key, expire=1800)
+            #         logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
+            #         raise InvalidCredentialsException()
 
-                await cache.delete(brute_force_key)
+            #     await cache.delete(brute_force_key)
 
             if user_data.email and user_data.email != user["email"]:
                 if await self.user_repo.check_email_exists(user_data.email, exclude_user_id=user_id):

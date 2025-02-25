@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, Depends, status
 
 from app.api.v1.services import UserService
-from app.api.cache.memcached_manager import CacheManager
+from app.api.cache.redis_manager import RedisManager
 
 from app.core.dependencies import get_user_service, get_cache
 from app.api.common.auth import get_current_user
@@ -84,10 +84,9 @@ async def update_user_endpoint(
     user_update: UserUpdate,
     user: User = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
-    cache: CacheManager = Depends(get_cache),
 ):
     """Обновить данные текущего пользователя."""
-    updated_user = await user_service.update_user(user["id"], user_update, cache)
+    updated_user = await user_service.update_user(user["id"], user_update)
 
     if user_update.password:
         response.delete_cookie(key="access_token")

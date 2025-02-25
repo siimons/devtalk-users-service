@@ -4,12 +4,12 @@ from typing import AsyncGenerator
 from fastapi import Depends
 
 from app.core.database import Database
-from app.api.cache.memcached_manager import CacheManager
+from app.api.cache.redis_manager import RedisManager
 from app.api.v1.repositories import UserRepository
 from app.api.v1.services import UserService
 
 db = Database()
-cache = CacheManager()
+cache = RedisManager()
 
 
 async def get_database() -> Database:
@@ -24,12 +24,12 @@ async def get_database() -> Database:
     return db
 
 
-async def get_cache() -> CacheManager:
+async def get_cache() -> RedisManager:
     """
     Dependency для получения объекта кэша.
 
     Returns:
-        CacheManager: Объект кэша.
+        RedisManager: Объект кэша.
     """
     if not cache.client:
         await cache.connect()
@@ -37,7 +37,7 @@ async def get_cache() -> CacheManager:
 
 
 async def get_user_repository(
-    db: Database = Depends(get_database)
+    db: Database = Depends(get_database),
 ) -> UserRepository:
     """
     Dependency для получения репозитория пользователей.
@@ -52,7 +52,7 @@ async def get_user_repository(
 
 
 async def get_user_service(
-    user_repo: UserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository),
 ) -> UserService:
     """
     Dependency для получения сервиса пользователей.
@@ -72,7 +72,7 @@ async def lifespan(app) -> AsyncGenerator[None, None]:
     Настройка жизненного цикла приложения.
 
     Args:
-        app: FastAPI-приложение.
+        app (FastAPI): FastAPI-приложение.
 
     Yields:
         None: Управление жизненным циклом.

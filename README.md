@@ -22,7 +22,7 @@ dev-talk-users/
 │   │   │   └── services.py
 │   │   ├── cache/
 │   │   │   ├── __init__.py
-│   │   │   └── memcached_manager.py
+│   │   │   └── redis_manager.py
 │   │   └── common/
 │   │       ├── __init__.py
 │   │       ├── auth.py
@@ -33,11 +33,16 @@ dev-talk-users/
 │   │   ├── config.py
 │   │   ├── logging.py
 │   │   ├── dependencies.py
-│   │   └── database.py
-│   └── events/
+│   │   ├── database.py
+│   │   └── celery.py
+│   ├── events/
+│   │   ├── __init__.py
+│   │   ├── producer.py
+│   │   └── consumer.py
+│   └── tasks/
 │       ├── __init__.py
-│       ├── producer.py
-│       └── consumer.py
+│       ├── send_email.py
+│       └── generate_report.py
 |
 ├── migrations/
 │   ├── __init__.py
@@ -51,6 +56,7 @@ dev-talk-users/
 │   │   ├── test_services.py
 │   │   ├── test_database.py
 │   │   ├── test_cache.py
+│   │   ├── test_celery.py
 │   │   └── test_utils.py
 │   ├── integration/
 │   │   ├── __init__.py
@@ -61,10 +67,13 @@ dev-talk-users/
 │   │   │   ├── test_update_user.py
 │   │   │   ├── test_delete_user.py
 │   │   │   └── test_list_users.py
-│   │   └── events/
+│   │   ├── events/
+│   │   │   ├── __init__.py
+│   │   │   ├── test_kafka_producer.py
+│   │   │   └── test_kafka_consumer.py
+│   │   └── celery/
 │   │       ├── __init__.py
-│   │       ├── test_kafka_producer.py
-│   │       └── test_kafka_consumer.py
+│   │       └── test_tasks.py
 │   └── e2e/
 │       ├── __init__.py
 │       └── test_user_flow.py
@@ -74,6 +83,7 @@ dev-talk-users/
 ├── docker-compose.yml
 ├── Dockerfile
 ├── main.py
+├── celery_worker.py
 ├── README.md
 └── requirements.txt
 ```

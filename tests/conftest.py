@@ -46,24 +46,24 @@ async def setup_database():
 async def setup_cache():
     """Очищает кэш перед каждым тестом."""
     await cache.connect()
-    await cache.client.flush_all()
-    
+    await cache.clear_cache()
+
     yield
     await cache.close()
 
 
 @pytest_asyncio.fixture
-async def get_test_user_payload():
+async def get_test_user_payload() -> dict:
     """Возвращает тестовые данные пользователя."""
     return {
         "username": "testuser",
         "email": "test@example.com",
-        "password": "securepassword123"
+        "password": "securepassword123",
     }
 
 
 @pytest_asyncio.fixture
-async def create_test_user(get_test_user_payload):
+async def create_test_user(get_test_user_payload: dict) -> dict:
     """Создаёт тестового пользователя в базе данных и возвращает его."""
     query = """
         INSERT INTO users (username, email, password)
@@ -75,7 +75,7 @@ async def create_test_user(get_test_user_payload):
         get_test_user_payload["email"],
         hashed_password,
     )
-    
+
     user_id = await db.execute(query, *args)
 
     query = "SELECT id, username, email FROM users WHERE id = %s"
@@ -85,7 +85,9 @@ async def create_test_user(get_test_user_payload):
 
 
 @pytest_asyncio.fixture
-async def authenticate_test_user(client: AsyncClient, get_test_user_payload, create_test_user):
+async def authenticate_test_user(
+    client: AsyncClient, get_test_user_payload: dict, create_test_user: dict
+) -> dict:
     """Аутентифицирует тестового пользователя и возвращает JWT-токены в cookies."""
     login_payload = {
         "email": get_test_user_payload["email"],
@@ -99,12 +101,12 @@ async def authenticate_test_user(client: AsyncClient, get_test_user_payload, cre
 
 
 @pytest_asyncio.fixture
-async def auth_client(client: AsyncClient, authenticate_test_user):
+async def auth_client(client: AsyncClient, authenticate_test_user: dict) -> AsyncClient:
     """Возвращает HTTP-клиент с авторизацией через cookies и заголовок Authorization."""
     client.cookies.update(authenticate_test_user)
-    
+
     access_token = authenticate_test_user.get("access_token")
     if access_token:
         client.headers.update({"Authorization": f"Bearer {access_token}"})
-    
+
     return client
