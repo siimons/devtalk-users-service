@@ -1,6 +1,5 @@
-import json
 import redis.asyncio as redis
-from typing import Optional, Dict, Any
+from typing import Optional
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -8,13 +7,19 @@ from app.core.logging import logger
 
 class RedisManager:
     """
-    Менеджер для работы с Redis, поддерживающий кэширование и защиту от brute force.
+    Менеджер для работы с Redis.
 
-    Атрибуты:
+    Attributes:
         client (Optional[redis.Redis]): Клиент Redis, используемый для операций.
     """
 
     def __init__(self):
+        """
+        Инициализирует RedisManager.
+
+        Args:
+            client (Optional[redis.Redis]): Клиент Redis, используемый для операций.
+        """
         self.client: Optional[redis.Redis] = None
 
     async def connect(self):
@@ -71,7 +76,7 @@ class RedisManager:
             logger.info(f"Ключ {key} не найден в Redis.")
         except Exception as e:
             logger.error(f"Ошибка при получении ключа {key} из Redis: {e}")
-        return None
+            return None
 
     async def set(self, key: str, value: str, expire: int = 3600):
         """
@@ -119,69 +124,5 @@ class RedisManager:
             return value
         except Exception as e:
             logger.error(f"Ошибка при увеличении значения ключа {key}: {e}")
-        return 0
-
-    async def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
-        """
-        Получает данные пользователя из кэша.
-
-        Args:
-            user_id (int): ID пользователя.
-
-        Returns:
-            Optional[Dict[str, Any]]: Данные пользователя или None.
-        """
-        cache_key = f"user:{user_id}"
-        cached_data = await self.get(cache_key)
-        if cached_data:
-            try:
-                return json.loads(cached_data)
-            except json.JSONDecodeError as e:
-                logger.error(f"Ошибка при декодировании данных пользователя {user_id}: {e}")
-        return None
-
-    async def set_user(self, user_id: int, user_data: Dict[str, Any], expire: int = 600):
-        """
-        Сохраняет данные пользователя в кэше.
-
-        Args:
-            user_id (int): ID пользователя.
-            user_data (Dict[str, Any]): Данные пользователя.
-            expire (int, optional): TTL в секундах. По умолчанию 600.
-        """
-        cache_key = f"user:{user_id}"
-        try:
-            await self.set(cache_key, json.dumps(user_data), expire)
-            logger.info(f"Данные пользователя {user_id} сохранены в кэш.")
-        except Exception as e:
-            logger.error(f"Ошибка при сохранении данных пользователя {user_id} в кэш: {e}")
-
-    async def check_brute_force(self, user_id: int, max_attempts: int = 5, expire: int = 1800) -> bool:
-        """
-        Проверяет, не превышено ли количество попыток входа.
-
-        Args:
-            user_id (int): ID пользователя.
-            max_attempts (int, optional): Максимальное число попыток. По умолчанию 5.
-            expire (int, optional): Время блокировки в секундах. По умолчанию 1800.
-
-        Returns:
-            bool: True, если попытки превышены, иначе False.
-        """
-        brute_force_key = f"brute_force:{user_id}"
-        attempts = await self.increment(brute_force_key, expire)
-        if attempts >= max_attempts:
-            logger.warning(f"Превышено число попыток для пользователя {user_id}. Блокировка на {expire} сек.")
-            return True
-        return False
-
-    async def reset_brute_force(self, user_id: int):
-        """
-        Сбрасывает счётчик попыток входа.
-
-        Args:
-            user_id (int): ID пользователя.
-        """
-        brute_force_key = f"brute_force:{user_id}"
-        await self.delete(brute_force_key)
-        logger.info(f"Счётчик попыток для пользователя {user_id} сброшен.")
+            return 0
+    

@@ -26,12 +26,38 @@ from app.core.logging import logger
 
 
 class UserService:
-    
-    def __init__(self, user_repo: UserRepository):
+    """
+    Сервис для управления пользователями.
+
+    Attributes:
+        user_repo (UserRepository): Репозиторий для работы с базой данных пользователей.
+        cache (RedisManager): Менеджер для работы с Redis.
+    """
+
+    def __init__(self, user_repo: UserRepository, cache: RedisManager):
+        """
+        Инициализирует UserService.
+
+        Args:
+            user_repo (UserRepository): Репозиторий для работы с базой данных пользователей.
+            cache (RedisManager): Менеджер для работы с Redis.
+        """
         self.user_repo = user_repo
+        self.cache = cache
 
     async def register_user(self, user_data: UserRegister) -> dict:
-        """Регистрация нового пользователя."""
+        """
+        Регистрирует нового пользователя.
+
+        Args:
+            user_data (UserRegister): Данные для регистрации пользователя.
+
+        Returns:
+            dict: Данные зарегистрированного пользователя.
+
+        Raises:
+            HTTPException: Если пользователь с таким email уже существует или произошла ошибка.
+        """
         try:
             logger.info(f"Попытка регистрации пользователя с email: {user_data.email}")
             if await self.user_repo.check_email_exists(user_data.email):
@@ -53,7 +79,18 @@ class UserService:
             )
 
     async def login_user(self, user_data: UserLogin) -> dict:
-        """Аутентификация пользователя и генерация JWT-токенов."""
+        """
+        Аутентифицирует пользователя и генерирует JWT-токены.
+
+        Args:
+            user_data (UserLogin): Данные для входа пользователя.
+
+        Returns:
+            dict: JWT-токены (access и refresh).
+
+        Raises:
+            HTTPException: Если учетные данные неверны или произошла ошибка.
+        """
         try:
             user = await self.user_repo.get_user_by_email(user_data.email)
             if not user or not verify_password(user_data.password, user["password"]):
@@ -72,7 +109,18 @@ class UserService:
             raise HTTPException(status_code=500, detail="Ошибка при входе в систему.")
 
     async def get_user(self, user_id: int) -> dict:
-        """Получает данные пользователя по ID."""
+        """
+        Получает данные пользователя по ID.
+
+        Args:
+            user_id (int): ID пользователя.
+
+        Returns:
+            dict: Данные пользователя.
+
+        Raises:
+            HTTPException: Если пользователь не найден или произошла ошибка.
+        """
         try:
             user = await self.user_repo.get_user_by_id(user_id)
             if not user:
@@ -86,34 +134,47 @@ class UserService:
             raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера.")
 
     async def update_user(self, user_id: int, user_data: UserUpdate) -> dict:
-        """Обновляет данные пользователя."""
+        """
+        Обновляет данные пользователя.
+
+        Args:
+            user_id (int): ID пользователя.
+            user_data (UserUpdate): Данные для обновления.
+
+        Returns:
+            dict: Обновлённые данные пользователя.
+
+        Raises:
+            HTTPException: Если пользователь не найден, email уже занят, неверный пароль,
+                          превышено количество попыток или произошла ошибка.
+        """
         try:
             user = await self.user_repo.get_user_by_id(user_id)
             if not user:
                 raise UserNotFoundException(user_id)
 
-            # brute_force_key = f"brute_force_user_{user_id}"
-            # if user_data.email or user_data.password:
-            #     if not user_data.current_password:
-            #         raise InvalidCredentialsException()
+            brute_force_key = f"brute_force:{user_id}"
+            if user_data.email or user_data.password:
+                if not user_data.current_password:
+                    raise InvalidCredentialsException()
 
-            #     failed_attempts = await cache.get(brute_force_key)
-            #     if failed_attempts and int(failed_attempts) >= 5:
-            #         raise TooManyRequestsException(1800)
+                attempts = await self.cache.get(brute_force_key)
+                if attempts and int(attempts) >= 5:
+                    raise TooManyRequestsException(1800)
 
-            #     if not verify_password(user_data.current_password, user["password"]):
-            #         attempts = await cache.increment(brute_force_key, expire=1800)
-            #         logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
-            #         raise InvalidCredentialsException()
+                if not verify_password(user_data.current_password, user["password"]):
+                    await self.cache.increment(brute_force_key, expire=1800)
+                    logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
+                    raise InvalidCredentialsException()
 
-            #     await cache.delete(brute_force_key)
+                await self.cache.delete(brute_force_key)
 
             if user_data.email and user_data.email != user["email"]:
                 if await self.user_repo.check_email_exists(user_data.email, exclude_user_id=user_id):
                     raise UserAlreadyExistsException(user_data.email)
 
-            hashed_password = hash_password(user_data.password) if user_data.password else None
-            updated_user = await self.user_repo.update_user(
+            hashed_password = hash_password(user_data.password) if user_data.password else user["password"]
+            updated_user = await self.user_repo.update_user_in_db(
                 user_id, user_data.username, user_data.email, hashed_password
             )
             logger.success(f"Пользователь с ID {user_id} успешно обновлён.")

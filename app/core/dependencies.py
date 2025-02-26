@@ -53,17 +53,19 @@ async def get_user_repository(
 
 async def get_user_service(
     user_repo: UserRepository = Depends(get_user_repository),
+    cache: RedisManager = Depends(get_cache),
 ) -> UserService:
     """
     Dependency для получения сервиса пользователей.
 
     Args:
         user_repo (UserRepository): Репозиторий пользователей.
+        cache (RedisManager): Объект кэша.
 
     Returns:
         UserService: Сервис пользователей.
     """
-    return UserService(user_repo)
+    return UserService(user_repo, cache)
 
 
 @asynccontextmanager
