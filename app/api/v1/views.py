@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Response, Depends, status
 
 from app.api.v1.services import UserService
-from app.api.cache.redis_manager import RedisManager
 
 from app.core.dependencies import get_user_service
 from app.api.common.authentication import get_current_user
@@ -11,7 +10,7 @@ from app.api.v1.schemas import (
     UserLogin,
     UserUpdate,
     UserDelete,
-    User
+    User,
 )
 
 router = APIRouter()

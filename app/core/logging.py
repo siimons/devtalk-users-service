@@ -1,8 +1,9 @@
 import os
 from sys import stdout
+
 from loguru import logger
 
-from app.core.config import settings
+from app.core.settings import settings
 
 LOG_FORMAT_TERMINAL = (
     "<green>{time:YYYY-MM-DD at HH:mm:ss}</green> | "
@@ -16,12 +17,14 @@ LOG_FORMAT_FILE = (
     "{name}:{function}:{line} - {message}"
 )
 
+
 def configure_logger():
     """
-    Конфигурирует логгер:
-    - Удаляет стандартный логгер
-    - Создаёт директорию для логов, если она не существует
-    - Настраивает логирование в файл с ротацией и вывод в консоль с цветами
+    Конфигурирует логгер.
+
+    - Удаляет стандартный логгер.
+    - Создаёт директорию для логов, если она не существует.
+    - Настраивает логирование в файл с ротацией и вывод в консоль с цветами.
     """
     logger.remove()
 
@@ -37,7 +40,7 @@ def configure_logger():
         level=settings.LOG_LEVEL,
         format=LOG_FORMAT_FILE,
         backtrace=True,
-        diagnose=True
+        diagnose=True,
     )
 
     logger.add(
@@ -46,10 +49,12 @@ def configure_logger():
         format=LOG_FORMAT_TERMINAL,
         backtrace=True,
         diagnose=True,
-        colorize=True
+        colorize=True,
     )
 
     logger.info("Logger has been configured successfully.")
 
+
 configure_logger()
-__all__ = ['logger']
+
+__all__ = ["logger"]

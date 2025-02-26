@@ -3,8 +3,8 @@ from typing import AsyncGenerator
 
 from fastapi import Depends
 
-from app.core.database import Database
-from app.api.cache.redis_manager import RedisManager
+from app.api.storage.database import Database
+from app.api.storage.redis import RedisManager
 from app.api.v1.repositories import UserRepository
 from app.api.v1.services import UserService
 

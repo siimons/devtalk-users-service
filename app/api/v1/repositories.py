@@ -1,4 +1,4 @@
-from app.core.database import Database
+from app.api.storage.database import Database
 
 
 class UserRepository:

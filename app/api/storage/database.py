@@ -1,7 +1,7 @@
 import aiomysql
 from typing import List, Optional
 
-from app.core.config import settings
+from app.core.settings import settings
 from app.core.logging import logger
 
 

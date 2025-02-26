@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from app.core.dependencies import get_user_repository
 from app.api.v1.repositories import UserRepository
-from app.core.config import settings
+from app.core.settings import settings
 
 
 def get_token(request: Request) -> str:

@@ -20,29 +20,31 @@ dev-talk-users/
 │   │   │   ├── views.py
 │   │   │   ├── repositories.py
 │   │   │   └── services.py
-│   │   ├── cache/
+│   │   ├── storage/
 │   │   │   ├── __init__.py
-│   │   │   └── redis_manager.py
+│   │   │   ├── database.py
+│   │   │   └── redis.py
 │   │   └── common/
 │   │       ├── __init__.py
-│   │       ├── auth.py
+│   │       ├── authentication.py
 │   │       ├── hashing.py
 │   │       └── jwt_manager.py
 │   ├── core/
 │   │   ├── __init__.py
-│   │   ├── config.py
+│   │   ├── settings.py
 │   │   ├── logging.py
-│   │   ├── dependencies.py
-│   │   ├── database.py
-│   │   └── celery.py
+│   │   └── dependencies.py
 │   ├── events/
 │   │   ├── __init__.py
 │   │   ├── producer.py
 │   │   └── consumer.py
-│   └── tasks/
+│   └── workers/
 │       ├── __init__.py
-│       ├── send_email.py
-│       └── generate_report.py
+│       ├── celery.py
+│       └── tasks/
+│           ├── __init__.py
+│           ├── send_email.py
+│           └── generate_report.py
 |
 ├── migrations/
 │   ├── __init__.py
@@ -53,26 +55,24 @@ dev-talk-users/
 │   ├── conftest.py
 │   ├── unit/
 │   │   ├── __init__.py
-│   │   ├── test_services.py
-│   │   ├── test_database.py
-│   │   ├── test_cache.py
-│   │   ├── test_celery.py
-│   │   └── test_utils.py
+│   │   ├── test_storage_database.py
+│   │   └── test_storage_redis.py
 │   ├── integration/
 │   │   ├── __init__.py
 │   │   ├── api/
 │   │   │   ├── __init__.py
-│   │   │   ├── test_register_user.py
-│   │   │   ├── test_get_user.py
-│   │   │   ├── test_update_user.py
-│   │   │   ├── test_delete_user.py
-│   │   │   └── test_list_users.py
+│   │   │   ├── test_get_user_endpoint.py
+│   │   │   ├── test_login_user_endpoint.py
+│   │   │   ├── test_logout_user_endpoint.py
+│   │   │   ├── test_register_user_endpoint.py
+│   │   │   └── test_update_user_endpoint.py
 │   │   ├── events/
 │   │   │   ├── __init__.py
-│   │   │   ├── test_kafka_producer.py
-│   │   │   └── test_kafka_consumer.py
-│   │   └── celery/
+│   │   │   ├── test_producer.py
+│   │   │   └── test_consumer.py
+│   │   └── workers/
 │   │       ├── __init__.py
+│   │       ├── test_workers_celery.py
 │   │       └── test_tasks.py
 │   └── e2e/
 │       ├── __init__.py
@@ -83,7 +83,7 @@ dev-talk-users/
 ├── docker-compose.yml
 ├── Dockerfile
 ├── main.py
-├── celery_worker.py
+├── worker_start.py
 ├── README.md
 └── requirements.txt
 ```

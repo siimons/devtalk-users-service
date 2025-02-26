@@ -1,13 +1,14 @@
+import json
 from fastapi import HTTPException
 
 from app.api.v1.repositories import UserRepository
-from app.api.cache.redis_manager import RedisManager
+from app.api.storage.redis import RedisManager
 
 from app.api.v1.schemas import (
     UserRegister,
     UserLogin,
     UserUpdate,
-    UserDelete
+    UserDelete,
 )
 
 from app.api.v1.exceptions import (
@@ -16,7 +17,7 @@ from app.api.v1.exceptions import (
     InvalidCredentialsException,
     UserUpdateException,
     TooManyRequestsException,
-    UserDeletionException
+    UserDeletionException,
 )
 
 from app.api.common.hashing import hash_password, verify_password
@@ -121,10 +122,21 @@ class UserService:
         Raises:
             HTTPException: Если пользователь не найден или произошла ошибка.
         """
+        cache_key = f"user:{user_id}"
+
         try:
+            cached_user = await self.cache.get(cache_key)
+            if cached_user:
+                logger.info(f"Данные пользователя {user_id} получены из кэша")
+                return json.loads(cached_user)
+
             user = await self.user_repo.get_user_by_id(user_id)
             if not user:
                 raise UserNotFoundException(user_id)
+
+            await self.cache.set(cache_key, json.dumps(user), expire=3600)
+            logger.info(f"Данные пользователя {user_id} сохранены в кэш")
+
             return user
         except UserNotFoundException as e:
             logger.error(f"Пользователь с ID {user_id} не найден.")
