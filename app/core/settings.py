@@ -30,8 +30,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # Elastic Email
+    SMTP_HOST: str = "smtp.elasticemail.com"
+    SMTP_PORT: int = 2525
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    EMAIL_FROM: str = "no-reply@dev-talk.com"
+    EMAIL_FROM_NAME: str = "DevTalk Support"
+
     # Тестирование
-    TESTING: bool = True
+    TESTING: bool = False
 
     model_config = ConfigDict(env_file=".env", extra="ignore")
 

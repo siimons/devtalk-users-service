@@ -20,7 +20,7 @@ from app.api.v1.exceptions import (
     UserDeletionException,
 )
 
-from app.api.common.hashing import hash_password, verify_password
+from app.api.common.hashing import hash_value, verify_value
 from app.api.common.jwt_manager import create_access_token, create_refresh_token
 
 from app.core.logging import logger
@@ -64,7 +64,7 @@ class UserService:
             if await self.user_repo.check_email_exists(user_data.email):
                 raise UserAlreadyExistsException(user_data.email)
 
-            hashed_password = hash_password(user_data.password)
+            hashed_password = hash_value(user_data.password)
             registered_user = await self.user_repo.create_user(
                 user_data.username, user_data.email, hashed_password
             )
@@ -94,7 +94,7 @@ class UserService:
         """
         try:
             user = await self.user_repo.get_user_by_email(user_data.email)
-            if not user or not verify_password(user_data.password, user["password"]):
+            if not user or not verify_value(user_data.password, user["password"]):
                 raise InvalidCredentialsException()
 
             access_token = create_access_token({"sub": user["id"]})
@@ -174,7 +174,7 @@ class UserService:
                 if attempts and int(attempts) >= 5:
                     raise TooManyRequestsException(1800)
 
-                if not verify_password(user_data.current_password, user["password"]):
+                if not verify_value(user_data.current_password, user["password"]):
                     await self.cache.increment(brute_force_key, expire=1800)
                     logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
                     raise InvalidCredentialsException()
@@ -185,7 +185,7 @@ class UserService:
                 if await self.user_repo.check_email_exists(user_data.email, exclude_user_id=user_id):
                     raise UserAlreadyExistsException(user_data.email)
 
-            hashed_password = hash_password(user_data.password) if user_data.password else user["password"]
+            hashed_password = hash_value(user_data.password) if user_data.password else user["password"]
             updated_user = await self.user_repo.update_user_in_db(
                 user_id, user_data.username, user_data.email, hashed_password
             )

@@ -5,7 +5,7 @@ from httpx import AsyncClient, ASGITransport
 
 from app.api.v1.views import router
 from app.core.dependencies import db, cache, lifespan
-from app.api.common.hashing import hash_password
+from app.api.common.hashing import hash_value
 
 
 @pytest.fixture
@@ -69,7 +69,7 @@ async def create_test_user(get_test_user_payload: dict) -> dict:
         INSERT INTO users (username, email, password)
         VALUES (%s, %s, %s)
     """
-    hashed_password = hash_password(get_test_user_payload["password"])
+    hashed_password = hash_value(get_test_user_payload["password"])
     args = (
         get_test_user_payload["username"],
         get_test_user_payload["email"],

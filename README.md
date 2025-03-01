@@ -38,6 +38,13 @@ dev-talk-users/
 │   │   ├── __init__.py
 │   │   ├── producer.py
 │   │   └── consumer.py
+│   ├── notifications/
+│   │   ├── __init__.py
+│   │   ├── email.py
+│   │   ├── schemas.py
+│   │   └── templates/
+│   │       ├── restoration_token.html
+│   │       └── welcome.html
 │   └── workers/
 │       ├── __init__.py
 │       ├── celery.py
@@ -56,7 +63,8 @@ dev-talk-users/
 │   ├── unit/
 │   │   ├── __init__.py
 │   │   ├── test_storage_database.py
-│   │   └── test_storage_redis.py
+│   │   ├── test_storage_redis.py
+│   │   └── test_notifications.py
 │   ├── integration/
 │   │   ├── __init__.py
 │   │   ├── api/
@@ -103,3 +111,4 @@ dev-talk-users/
 - GET `/api/v1/users/current` — получить данные текущего пользователя.
 - PATCH `/api/v1/users/current` — обновить данные текущего пользователя.
 - DELETE `/api/v1/users/current` — удалить аккаунт текущего пользователя.
+- POST `/api/v1/users/restore` – восстановить ранее удалённый аккаунт.

@@ -3,28 +3,28 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], default="bcrypt", deprecated="auto")
 
 
-def hash_password(password: str) -> str:
+def hash_value(value: str) -> str:
     """
-    Хэширует пароль с использованием bcrypt.
+    Хэширует переданное значение с использованием bcrypt.
 
     Args:
-        password (str): Пароль в текстовом виде.
+        value (str): Значение в текстовом виде.
 
     Returns:
-        str: Захэшированный пароль.
+        str: Захэшированное значение.
     """
-    return pwd_context.hash(password)
+    return pwd_context.hash(value)
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+def verify_value(plain_value: str, hashed_value: str) -> bool:
     """
-    Проверяет, соответствует ли предоставленный пароль хэшу.
+    Проверяет, соответствует ли переданное значение его хэшу.
 
     Args:
-        plain_password (str): Оригинальный пароль в текстовом виде.
-        hashed_password (str): Захэшированный пароль.
+        plain_value (str): Оригинальное значение в текстовом виде.
+        hashed_value (str): Захэшированное значение.
 
     Returns:
-        bool: True, если пароль верен, иначе False.
+        bool: True, если значение верно, иначе False.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(plain_value, hashed_value)
