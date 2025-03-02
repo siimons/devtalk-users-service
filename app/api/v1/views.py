@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Response, Depends, status
+from fastapi import APIRouter, Request, Response, Depends, status
 
 from app.api.v1.services import UserService
 
 from app.core.dependencies import get_user_service
+from app.api.security.rate_limiter import get_rate_limiter
 from app.api.common.authentication import get_current_user
 
 from app.api.v1.schemas import (
@@ -18,7 +19,9 @@ router = APIRouter()
 
 
 @router.post("/auth/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+@get_rate_limiter().limit("20/minute")
 async def register_user_endpoint(
+    request: Request,
     user_data: UserRegister,
     user_service: UserService = Depends(get_user_service),
 ):
@@ -27,7 +30,9 @@ async def register_user_endpoint(
 
 
 @router.post("/auth/login", response_model=dict, status_code=status.HTTP_200_OK)
+@get_rate_limiter().limit("30/minute")
 async def login_user_endpoint(
+    request: Request,
     response: Response,
     user_data: UserLogin,
     user_service: UserService = Depends(get_user_service),
@@ -70,7 +75,9 @@ async def logout_user_endpoint():
 
 
 @router.get("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
+@get_rate_limiter().limit("60/minute")
 async def get_user_endpoint(
+    request: Request,
     user: User = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
@@ -79,7 +86,9 @@ async def get_user_endpoint(
 
 
 @router.patch("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
+@get_rate_limiter().limit("20/minute")
 async def update_user_endpoint(
+    request: Request,
     response: Response,
     user_update: UserUpdate,
     user: User = Depends(get_current_user),

@@ -1,12 +1,23 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.v1.views import router
 from app.core.dependencies import lifespan
+from app.api.security.exceptions import rate_limit_exceeded_handler
 
 
 def create_application() -> FastAPI:
-    """Создаёт экземпляр FastAPI-приложения."""
+    """
+    Создаёт и настраивает экземпляр FastAPI-приложения.
+
+    Returns:
+        FastAPI: Экземпляр FastAPI-приложения.
+    """
     app = FastAPI(
         title="Dev Talk API - Users",
         description="RESTful API for managing users",
@@ -17,6 +28,17 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(router, prefix="/api/v1", tags=["Users"])
+
+    app.add_middleware(SlowAPIMiddleware)
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+    app.add_middleware(
+        GZipMiddleware,
+        minimum_size=1000,
+    )
+
+    app.exception_handler(RateLimitExceeded)(rate_limit_exceeded_handler)
+
     return app
 
 

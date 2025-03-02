@@ -24,11 +24,15 @@ dev-talk-users/
 │   │   │   ├── __init__.py
 │   │   │   ├── database.py
 │   │   │   └── redis.py
-│   │   └── common/
+│   │   ├── common/
+│   │   │   ├── __init__.py
+│   │   │   ├── authentication.py
+│   │   │   ├── hashing.py
+│   │   │   └── jwt_manager.py
+│   │   └── security/
 │   │       ├── __init__.py
-│   │       ├── authentication.py
-│   │       ├── hashing.py
-│   │       └── jwt_manager.py
+│   │       ├── rate_limiter.py
+│   │       └── exceptions.py
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── settings.py
