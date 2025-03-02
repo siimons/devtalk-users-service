@@ -51,7 +51,7 @@ dev-talk-users/
 │       └── tasks/
 │           ├── __init__.py
 │           ├── send_email.py
-│           └── generate_report.py
+│           └── delete_account.py
 |
 ├── migrations/
 │   ├── __init__.py

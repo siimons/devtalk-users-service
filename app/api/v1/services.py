@@ -9,6 +9,7 @@ from app.api.v1.schemas import (
     UserLogin,
     UserUpdate,
     UserDelete,
+    UserRestore,
 )
 
 from app.api.v1.exceptions import (
