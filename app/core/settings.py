@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # Restoration tokens
+    RESTORATION_TOKEN_EXPIRE_DAYS: int = 30
+
     # Elastic Email
     SMTP_HOST: str = "smtp.elasticemail.com"
     SMTP_PORT: int = 2525

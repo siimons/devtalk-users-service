@@ -28,7 +28,8 @@ dev-talk-users/
 │   │   │   ├── __init__.py
 │   │   │   ├── authentication.py
 │   │   │   ├── hashing.py
-│   │   │   └── jwt_manager.py
+│   │   │   ├── jwt_manager.py
+│   │   │   └── tokens.py
 │   │   └── security/
 │   │       ├── __init__.py
 │   │       ├── rate_limiter.py
