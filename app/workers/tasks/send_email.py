@@ -6,7 +6,11 @@ from app.notifications.schemas import RestorationEmailNotification
 from app.core.logging import logger
 
 
-@shared_task(name="send_restoration_email", autoretry_for=(Exception,), retry_kwargs={"max_retries": 3})
+@shared_task(
+    name="send_restoration_email",
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3},
+)
 def send_restoration_email(to_email: str, restoration_token: str) -> bool:
     """
     Задача Celery для отправки email с токеном восстановления.

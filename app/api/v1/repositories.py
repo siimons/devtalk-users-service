@@ -151,6 +151,20 @@ class UserRepository:
         await self.db.execute(query, restoration_token, user_id)
         return True
 
+    async def hard_delete_user(self, user_id: int) -> bool:
+        """
+        Окончательно удаляет пользователя из базы данных.
+
+        Args:
+            user_id (int): ID пользователя.
+
+        Returns:
+            bool: True, если пользователь успешно удалён, иначе False.
+        """
+        query = "DELETE FROM users WHERE id = %s"
+        await self.db.execute(query, user_id)
+        return True
+
     async def restore_user(self, user_id: int) -> bool:
         """
         Восстанавливает удалённого пользователя.
