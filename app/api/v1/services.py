@@ -3,6 +3,7 @@ from fastapi import HTTPException
 
 from app.api.v1.repositories import UserRepository
 from app.api.storage.redis import RedisManager
+from app.api.common.tokens import TokenService
 
 from app.api.v1.schemas import (
     UserRegister,
@@ -24,6 +25,10 @@ from app.api.v1.exceptions import (
 from app.api.common.hashing import hash_value, verify_value
 from app.api.common.jwt_manager import create_access_token, create_refresh_token
 
+# from app.workers.tasks.send_email import send_restoration_email
+# from app.workers.tasks.delete_account import delete_account_permanently
+
+from app.core.settings import settings
 from app.core.logging import logger
 
 
@@ -159,25 +164,28 @@ class UserService:
 
         Raises:
             HTTPException: Если пользователь не найден, email уже занят, неверный пароль,
-                          превышено количество попыток или произошла ошибка.
+                        превышено количество попыток или произошла ошибка.
         """
         try:
             user = await self.user_repo.get_user_by_id(user_id)
             if not user:
                 raise UserNotFoundException(user_id)
 
-            brute_force_key = f"brute_force:{user_id}"
+            brute_force_key = f"brute_force_update:{user_id}"
             if user_data.email or user_data.password:
                 if not user_data.current_password:
                     raise InvalidCredentialsException()
 
                 attempts = await self.cache.get(brute_force_key)
-                if attempts and int(attempts) >= 5:
-                    raise TooManyRequestsException(1800)
+                if attempts and int(attempts) >= settings.BRUTE_FORCE_MAX_ATTEMPTS:
+                    raise TooManyRequestsException(settings.BRUTE_FORCE_BLOCK_TIME)
 
                 if not verify_value(user_data.current_password, user["password"]):
-                    await self.cache.increment(brute_force_key, expire=1800)
-                    logger.warning(f"Неудачная попытка входа для пользователя {user_id}. Попытка {attempts}/5.")
+                    await self.cache.increment(brute_force_key, expire=settings.BRUTE_FORCE_BLOCK_TIME)
+                    logger.warning(
+                        f"Неудачная попытка входа для пользователя {user_id}.\n"
+                        f"Попытка {attempts}/{settings.BRUTE_FORCE_MAX_ATTEMPTS}."
+                    )
                     raise InvalidCredentialsException()
 
                 await self.cache.delete(brute_force_key)
@@ -192,8 +200,71 @@ class UserService:
             )
             logger.success(f"Пользователь с ID {user_id} успешно обновлён.")
             return updated_user
-        except (UserNotFoundException, UserAlreadyExistsException, InvalidCredentialsException, TooManyRequestsException) as e:
+        except (
+            UserNotFoundException,
+            UserAlreadyExistsException,
+            InvalidCredentialsException,
+            TooManyRequestsException,
+        ) as e:
             raise e.to_http()
         except Exception as e:
             logger.error(f"Ошибка при обновлении пользователя с ID {user_id}: {e}")
             raise UserUpdateException(user_id).to_http()
+
+    async def delete_user(self, user_id: int, user_data: UserDelete) -> bool:
+        """
+        Удаляет аккаунт пользователя.
+
+        Args:
+            user_id (int): ID пользователя.
+            user_data (UserDelete): Данные для удаления аккаунта.
+
+        Returns:
+            bool: True, если пользователь успешно помечен как удалённый.
+
+        Raises:
+            HTTPException: Если пользователь не найден, пароль неверен,
+                        превышено количество попыток или произошла ошибка.
+        """
+        try:
+            user = await self.user_repo.get_user_by_id(user_id)
+            if not user:
+                raise UserNotFoundException(user_id)
+
+            brute_force_key = f"brute_force_delete:{user_id}"
+            attempts = await self.cache.get(brute_force_key)
+            if attempts and int(attempts) >= settings.BRUTE_FORCE_MAX_ATTEMPTS:
+                raise TooManyRequestsException(settings.BRUTE_FORCE_BLOCK_TIME)
+
+            if not verify_value(user_data.current_password, user["password"]):
+                await self.cache.increment(brute_force_key, expire=settings.BRUTE_FORCE_BLOCK_TIME)
+                logger.warning(
+                    f"Неудачная попытка удаления для пользователя {user_id}.\n"
+                    f"Попытка {attempts}/{settings.BRUTE_FORCE_MAX_ATTEMPTS}."
+                )
+                raise InvalidCredentialsException()
+
+            restoration_token = TokenService.generate_restoration_token()
+            hashed_token = hash_value(restoration_token)
+
+            await self.user_repo.soft_delete_user(user_id, hashed_token)
+
+            # delete_account_permanently.apply_async(
+            #     args=[user_id], countdown=settings.RESTORATION_TOKEN_EXPIRE_DAYS * 86400
+            # )
+            # send_restoration_email.delay(user["email"], restoration_token)
+
+            logger.success(
+                f"Пользователь {user_id} помечен как удалённый. "
+                f"Токен восстановления отправлен на email."
+            )
+            return True
+        except (
+            UserNotFoundException,
+            InvalidCredentialsException,
+            TooManyRequestsException,
+        ) as e:
+            raise e.to_http()
+        except Exception as e:
+            logger.error(f"Ошибка при удалении пользователя {user_id}: {e}")
+            raise UserDeletionException(user_id).to_http()

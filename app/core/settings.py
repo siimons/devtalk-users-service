@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # Brute Force Protection
+    BRUTE_FORCE_MAX_ATTEMPTS: int = 5
+    BRUTE_FORCE_BLOCK_TIME: int = 1800
+
     # Restoration tokens
     RESTORATION_TOKEN_EXPIRE_DAYS: int = 30
 

@@ -102,3 +102,22 @@ async def update_user_endpoint(
         response.delete_cookie(key="refresh_token")
 
     return updated_user
+
+
+@router.delete("/users/current", response_model=dict, status_code=status.HTTP_200_OK)
+@get_rate_limiter().limit("20/minute")
+async def delete_user_endpoint(
+    request: Request,
+    response: Response,
+    user_data: UserDelete,
+    user: User = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+):
+    """Удалить аккаунт текущего пользователя."""
+    is_deleted = await user_service.delete_user(user["id"], user_data)
+
+    if is_deleted:
+        response.delete_cookie(key="access_token")
+        response.delete_cookie(key="refresh_token")
+
+    return {"message": "Your account has been successfully deleted. Check your email for restoration instructions."}
