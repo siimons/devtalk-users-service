@@ -58,6 +58,25 @@ class UserRepository:
         users = await self.db.fetch(query, user_id)
         return users[0] if users else None
 
+    async def get_user_public_data_by_id(self, user_id: int) -> Optional[dict]:
+        """
+        Возвращает публичные данные пользователя по ID.
+
+        Args:
+            user_id (int): Уникальный идентификатор пользователя.
+
+        Returns:
+            Optional[dict]: Публичные данные пользователя или None, если пользователь не найден или удалён.
+        """
+        query = """
+        SELECT id, username, email
+        FROM users
+        WHERE id = %s
+        AND deleted_at IS NULL
+        """
+        users = await self.db.fetch(query, user_id)
+        return users[0] if users else None
+
     async def create_user(self, username: str, email: str, password: str) -> dict:
         """
         Создаёт нового пользователя в базе данных.

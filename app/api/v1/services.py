@@ -136,7 +136,7 @@ class UserService:
                 logger.info(f"Данные пользователя {user_id} получены из кэша")
                 return json.loads(cached_user)
 
-            user = await self.user_repo.get_user_by_id(user_id)
+            user = await self.user_repo.get_user_public_data_by_id(user_id)
             if not user:
                 raise UserNotFoundException(user_id)
 
