@@ -44,7 +44,7 @@ async def login_user_endpoint(
         key="access_token",
         value=tokens["access_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="Lax",
         max_age=3600,
     )
@@ -52,7 +52,7 @@ async def login_user_endpoint(
         key="refresh_token",
         value=tokens["refresh_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="Lax",
         max_age=86400,
     )
