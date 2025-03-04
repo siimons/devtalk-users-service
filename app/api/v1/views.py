@@ -90,14 +90,14 @@ async def get_user_endpoint(
 async def update_user_endpoint(
     request: Request,
     response: Response,
-    user_update: UserUpdate,
+    user_data: UserUpdate,
     user: User = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
     """Обновить данные текущего пользователя."""
-    updated_user = await user_service.update_user(user["id"], user_update)
+    updated_user = await user_service.update_user(user["id"], user_data)
 
-    if user_update.password:
+    if user_data.password:
         response.delete_cookie(key="access_token")
         response.delete_cookie(key="refresh_token")
 

@@ -14,7 +14,6 @@ from app.api.v1.schemas import (
 )
 
 from app.api.v1.exceptions import (
-    UserNotFoundException,
     UserAlreadyExistsException,
     InvalidCredentialsException,
     UserUpdateException,
@@ -96,11 +95,16 @@ class UserService:
             dict: JWT-токены (access и refresh).
 
         Raises:
-            HTTPException: Если учетные данные неверны или произошла ошибка.
+            HTTPException: Если пользователь не найден, учетные данные неверны или произошла ошибка.
         """
         try:
             user = await self.user_repo.get_user_by_email(user_data.email)
-            if not user or not verify_value(user_data.password, user["password"]):
+            if not user:
+                logger.warning(f"Пользователь с email {user_data.email} не найден.")
+                raise InvalidCredentialsException()
+
+            if not verify_value(user_data.password, user["password"]):
+                logger.warning(f"Неверный пароль для пользователя с email {user_data.email}.")
                 raise InvalidCredentialsException()
 
             access_token = create_access_token({"sub": user["id"]})
@@ -109,7 +113,6 @@ class UserService:
             logger.info(f"Пользователь {user['username']} успешно аутентифицирован.")
             return {"access_token": access_token, "refresh_token": refresh_token}
         except InvalidCredentialsException as e:
-            logger.warning(f"Ошибка аутентификации для {user_data.email}: неверные учетные данные.")
             raise e.to_http()
         except Exception as e:
             logger.error(f"Ошибка при аутентификации: {e}")
@@ -126,7 +129,7 @@ class UserService:
             dict: Данные пользователя.
 
         Raises:
-            HTTPException: Если пользователь не найден или произошла ошибка.
+            HTTPException: Если произошла ошибка.
         """
         cache_key = f"user:{user_id}"
 
@@ -138,15 +141,13 @@ class UserService:
 
             user = await self.user_repo.get_user_public_data_by_id(user_id)
             if not user:
-                raise UserNotFoundException(user_id)
+                logger.error(f"Пользователь с ID {user_id} не найден.")
+                raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера.")
 
             await self.cache.set(cache_key, json.dumps(user), expire=3600)
             logger.info(f"Данные пользователя {user_id} сохранены в кэш")
 
             return user
-        except UserNotFoundException as e:
-            logger.error(f"Пользователь с ID {user_id} не найден.")
-            raise e.to_http()
         except Exception as e:
             logger.error(f"Ошибка при получении данных пользователя {user_id}: {e}")
             raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера.")
@@ -163,13 +164,11 @@ class UserService:
             dict: Обновлённые данные пользователя.
 
         Raises:
-            HTTPException: Если пользователь не найден, email уже занят, неверный пароль,
+            HTTPException: Если email уже занят, неверный пароль,
                         превышено количество попыток или произошла ошибка.
         """
         try:
             user = await self.user_repo.get_user_by_id(user_id)
-            if not user:
-                raise UserNotFoundException(user_id)
 
             brute_force_key = f"brute_force_update:{user_id}"
             if user_data.email or user_data.password:
@@ -198,10 +197,14 @@ class UserService:
             updated_user = await self.user_repo.update_user_in_db(
                 user_id, user_data.username, user_data.email, hashed_password
             )
+
+            cache_key = f"user:{user_id}"
+            await self.cache.delete(cache_key)
+            logger.info(f"Кэш пользователя {user_id} сброшен после обновления данных.")
+
             logger.success(f"Пользователь с ID {user_id} успешно обновлён.")
             return updated_user
         except (
-            UserNotFoundException,
             UserAlreadyExistsException,
             InvalidCredentialsException,
             TooManyRequestsException,
@@ -223,13 +226,10 @@ class UserService:
             bool: True, если пользователь успешно помечен как удалённый.
 
         Raises:
-            HTTPException: Если пользователь не найден, пароль неверен,
-                        превышено количество попыток или произошла ошибка.
+            HTTPException: Если пароль неверный, превышено количество попыток или произошла ошибка.
         """
         try:
             user = await self.user_repo.get_user_by_id(user_id)
-            if not user:
-                raise UserNotFoundException(user_id)
 
             brute_force_key = f"brute_force_delete:{user_id}"
             attempts = await self.cache.get(brute_force_key)
@@ -261,7 +261,6 @@ class UserService:
             )
             return True
         except (
-            UserNotFoundException,
             InvalidCredentialsException,
             TooManyRequestsException,
         ) as e:
