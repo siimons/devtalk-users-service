@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 
 from app.api.v1.views import router
-from app.core.dependencies import db, cache, lifespan
+from app.core.dependencies.common import db, cache, lifespan
 from app.api.common.hashing import hash_value
 
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, Depends, status
 
 from app.api.v1.services import UserService
 
-from app.core.dependencies import get_user_service
+from app.core.dependencies.services import get_user_service
 from app.api.security.rate_limiter import get_rate_limiter
 from app.api.common.authentication import get_current_user
 

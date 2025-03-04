@@ -4,7 +4,7 @@ from jose.exceptions import JWTError, ExpiredSignatureError
 from fastapi import Request, HTTPException, status, Depends
 from datetime import datetime, timezone
 
-from app.core.dependencies import get_user_repository
+from app.core.dependencies.repositories import get_user_repository
 from app.api.v1.repositories import UserRepository
 from app.core.settings import settings
 

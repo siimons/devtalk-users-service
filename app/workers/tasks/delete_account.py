@@ -1,6 +1,6 @@
 from celery import shared_task
 
-from app.core.dependencies import get_user_repository
+from app.core.dependencies.repositories import get_user_repository
 from app.core.logging import logger
 
 

@@ -25,8 +25,8 @@ from app.api.v1.exceptions import (
 from app.api.common.hashing import hash_value, verify_value
 from app.api.common.jwt_manager import create_access_token, create_refresh_token
 
-# from app.workers.tasks.send_email import send_restoration_email
-# from app.workers.tasks.delete_account import delete_account_permanently
+from app.workers.tasks.send_email import send_restoration_email
+from app.workers.tasks.delete_account import delete_account_permanently
 
 from app.core.settings import settings
 from app.core.logging import logger
@@ -249,10 +249,11 @@ class UserService:
 
             await self.user_repo.soft_delete_user(user_id, hashed_token)
 
-            # delete_account_permanently.apply_async(
-            #     args=[user_id], countdown=settings.RESTORATION_TOKEN_EXPIRE_DAYS * 86400
-            # )
-            # send_restoration_email.delay(user["email"], restoration_token)
+            delete_account_permanently.apply_async(
+                args=[user_id],
+                countdown=settings.RESTORATION_TOKEN_EXPIRE_DAYS * 86400,
+            )
+            send_restoration_email.delay(user["email"], restoration_token)
 
             logger.success(
                 f"Пользователь {user_id} помечен как удалённый. "

@@ -7,17 +7,11 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.v1.views import router
-from app.core.dependencies import lifespan
+from app.core.dependencies.common import lifespan
 from app.api.security.exceptions import rate_limit_exceeded_handler
 
 
 def create_application() -> FastAPI:
-    """
-    Создаёт и настраивает экземпляр FastAPI-приложения.
-
-    Returns:
-        FastAPI: Экземпляр FastAPI-приложения.
-    """
     app = FastAPI(
         title="Dev Talk API - Users",
         description="RESTful API for managing users",
