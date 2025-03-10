@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 
-from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from app.api.security.exceptions import RateLimitExceededError
 
 from app.api.v1.views import router
 from app.core.dependencies.common import lifespan
@@ -31,7 +31,7 @@ def create_application() -> FastAPI:
         minimum_size=1000,
     )
 
-    app.exception_handler(RateLimitExceeded)(rate_limit_exceeded_handler)
+    app.exception_handler(RateLimitExceededError)(rate_limit_exceeded_handler)
 
     return app
 
