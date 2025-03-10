@@ -2,6 +2,11 @@ import pytest
 from httpx import AsyncClient
 from fastapi import status
 
+from app.api.v1.exceptions import (
+    InvalidCredentialsException,
+    TooManyRequestsException,
+)
+
 
 @pytest.mark.asyncio
 async def test_update_user_success(auth_client: AsyncClient):
@@ -39,7 +44,7 @@ async def test_update_user_invalid_password(auth_client: AsyncClient):
     response = await auth_client.patch("/api/v1/users/current", json=update_payload)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Ошибка: {response.text}"
-    assert response.json()["detail"] == "Неверный email или пароль.", "Сообщение об ошибке некорректно"
+    assert response.json()["detail"] == InvalidCredentialsException().message, "Сообщение об ошибке некорректно"
 
 
 @pytest.mark.asyncio
@@ -55,7 +60,7 @@ async def test_update_user_without_password(auth_client: AsyncClient):
     response = await auth_client.patch("/api/v1/users/current", json=update_payload)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Ошибка: {response.text}"
-    assert response.json()["detail"] == "Неверный email или пароль.", "Некорректное сообщение об ошибке"
+    assert response.json()["detail"] == InvalidCredentialsException().message, "Некорректное сообщение об ошибке"
 
 
 @pytest.mark.asyncio
@@ -75,7 +80,7 @@ async def test_update_user_rate_limit(auth_client: AsyncClient):
 
     response = await auth_client.patch("/api/v1/users/current", json=update_payload)
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS, f"Ошибка: {response.text}"
-    assert response.json()["detail"] == "Слишком много запросов. Попробуйте снова через 1800 секунд.", \
+    assert response.json()["detail"] == TooManyRequestsException(retry_after=1800).message, \
         "Некорректное сообщение об ошибке"
 
 

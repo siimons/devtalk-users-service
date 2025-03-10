@@ -2,6 +2,8 @@ import pytest
 from httpx import AsyncClient
 from fastapi import status
 
+from app.api.v1.exceptions import UserAlreadyExistsException
+
 
 @pytest.mark.asyncio
 async def test_register_user_success(client: AsyncClient, get_test_user_payload):
@@ -34,6 +36,5 @@ async def test_register_user_duplicate_email(client: AsyncClient, create_test_us
     response = await client.post("/api/v1/auth/register", json=payload)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST, f"Ошибка: {response.text}"
-    assert response.json() == {
-        "detail": f"Пользователь с email {create_test_user["email"]} уже существует."
-    }
+    assert response.json()["detail"] == UserAlreadyExistsException(email=create_test_user["email"]).message, \
+        "Некорректное сообщение об ошибке"

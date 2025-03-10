@@ -2,6 +2,8 @@ import pytest
 from httpx import AsyncClient
 from fastapi import status
 
+from app.api.v1.exceptions import InvalidCredentialsException
+
 
 @pytest.mark.asyncio
 async def test_login_user_success(client: AsyncClient, create_test_user, get_test_user_payload):
@@ -45,7 +47,7 @@ async def test_login_user_wrong_password(client: AsyncClient, create_test_user):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Ошибка: {response.text}"
 
     response_data = response.json()
-    assert response_data["detail"] == "Неверный email или пароль.", "Некорректное сообщение об ошибке"
+    assert response.json()["detail"] == InvalidCredentialsException().message, "Некорректное сообщение об ошибке"
 
 
 @pytest.mark.asyncio
@@ -64,7 +66,7 @@ async def test_login_user_nonexistent_email(client: AsyncClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Ошибка: {response.text}"
 
     response_data = response.json()
-    assert response_data["detail"] == "Неверный email или пароль.", "Некорректное сообщение об ошибке"
+    assert response.json()["detail"] == InvalidCredentialsException().message, "Некорректное сообщение об ошибке"
 
 
 @pytest.mark.asyncio
