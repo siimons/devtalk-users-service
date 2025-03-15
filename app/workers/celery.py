@@ -1,5 +1,4 @@
 from celery import Celery
-from celery.signals import after_setup_logger, after_setup_task_logger
 
 from app.core.settings import settings
 from app.core.logging import logger
@@ -30,31 +29,10 @@ celery.conf.update(
     worker_hijack_root_logger=False,
 )
 
-@after_setup_logger.connect
-@after_setup_task_logger.connect
-def setup_celery_logging(logger, *args, **kwargs):
-    """Настраивает логирование для Celery."""
-    logger.handlers.clear()
-
-    celery_log_path = "logs/celery.log"
-
-    logger.add(
-        celery_log_path,
-        rotation=settings.LOG_ROTATION,
-        retention=settings.LOG_RETENTION,
-        level=settings.LOG_LEVEL,
-        format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {name}:{function}:{line} - {message}",
-        backtrace=True,
-        diagnose=True,
-        filter=lambda record: "celery" in record["name"],
+if settings.TESTING:
+    celery.conf.update(
+        task_always_eager=True,
+        task_eager_propagates=True,
     )
 
-    logger.info("Celery logging configured successfully. Logs will be saved to: {}", celery_log_path)
-
-logger.info("Celery application initialized with broker: {}", settings.celery_broker_url)
-logger.info("Celery configuration updated successfully")
-
-if settings.TESTING:
-    celery.conf.task_always_eager = True
-    celery.conf.task_eager_propagates = True
-    logger.info("Celery running in testing mode (tasks executed eagerly)")
+logger.info("Celery has been successfully configured.")

@@ -10,6 +10,7 @@ from app.core.logging import logger
     name="send_restoration_email",
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3},
+    time_limit=30,
 )
 def send_restoration_email(to_email: str, restoration_token: str) -> bool:
     """

@@ -100,7 +100,6 @@ dev-talk-users/
 ├── docker-compose.yml
 ├── Dockerfile
 ├── main.py
-├── worker_start.py
 ├── README.md
 └── requirements.txt
 ```

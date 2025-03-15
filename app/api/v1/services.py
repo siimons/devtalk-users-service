@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 
 from app.api.v1.repositories import UserRepository
@@ -249,11 +250,21 @@ class UserService:
 
             await self.user_repo.soft_delete_user(user_id, hashed_token)
 
+            deletion_time = datetime.now(timezone.utc) + timedelta(days=settings.RESTORATION_TOKEN_EXPIRE_DAYS)
+            logger.info(
+                f"Запланировано окончательное удаление аккаунта пользователя {user_id}. "
+                f"Удаление произойдёт {deletion_time}."
+            )
+
             delete_account_permanently.apply_async(
                 args=[user_id],
-                countdown=settings.RESTORATION_TOKEN_EXPIRE_DAYS * 86400,
+                eta=deletion_time,
             )
-            send_restoration_email.delay(user["email"], restoration_token)
+
+            send_restoration_email.delay(
+                user["email"],
+                restoration_token,
+            )
 
             logger.success(
                 f"Пользователь {user_id} помечен как удалённый. "

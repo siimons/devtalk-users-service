@@ -20,9 +20,8 @@ async def test_login_user_success(client: AsyncClient, create_test_user, get_tes
 
     assert response.status_code == status.HTTP_200_OK, f"Ошибка: {response.text}"
 
-    response_data = response.json()
-    assert "access_token" in response_data, "Ответ должен содержать access_token"
-    assert response_data["token_type"] == "bearer", "Неверный тип токена"
+    assert "access_token" in response.json(), "Ответ должен содержать access_token"
+    assert response.json()["token_type"] == "bearer", "Неверный тип токена"
 
     access_token_cookie = response.cookies.get("access_token")
     assert access_token_cookie, "access_token должен быть установлен в cookies"
@@ -45,8 +44,6 @@ async def test_login_user_wrong_password(client: AsyncClient, create_test_user):
     response = await client.post("/api/v1/auth/login", json=payload)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Ошибка: {response.text}"
-
-    response_data = response.json()
     assert response.json()["detail"] == InvalidCredentialsException().message, "Некорректное сообщение об ошибке"
 
 
@@ -64,8 +61,6 @@ async def test_login_user_nonexistent_email(client: AsyncClient):
     response = await client.post("/api/v1/auth/login", json=payload)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Ошибка: {response.text}"
-
-    response_data = response.json()
     assert response.json()["detail"] == InvalidCredentialsException().message, "Некорректное сообщение об ошибке"
 
 

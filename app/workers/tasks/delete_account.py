@@ -8,6 +8,8 @@ from app.core.logging import logger
     name="delete_account_permanently",
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3},
+    time_limit=300,
+    acks_late=True,
 )
 async def delete_account_permanently(user_id: int) -> None:
     """Окончательно удаляет аккаунт пользователя.
