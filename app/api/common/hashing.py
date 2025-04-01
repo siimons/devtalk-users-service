@@ -1,6 +1,4 @@
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], default="bcrypt", deprecated="auto")
+import bcrypt
 
 
 def hash_value(value: str) -> str:
@@ -13,7 +11,8 @@ def hash_value(value: str) -> str:
     Returns:
         str: Захэшированное значение.
     """
-    return pwd_context.hash(value)
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(value.encode('utf-8'), salt).decode('utf-8')
 
 
 def verify_value(plain_value: str, hashed_value: str) -> bool:
@@ -25,6 +24,15 @@ def verify_value(plain_value: str, hashed_value: str) -> bool:
         hashed_value (str): Захэшированное значение.
 
     Returns:
-        bool: True, если значение верно, иначе False.
+        bool: True если значение соответствует хэшу, иначе False.
+
+    Raises:
+        ValueError: Если переданные значения не могут быть обработаны.
     """
-    return pwd_context.verify(plain_value, hashed_value)
+    try:
+        return bcrypt.checkpw(
+            plain_value.encode('utf-8'),
+            hashed_value.encode('utf-8')
+        )
+    except (ValueError, TypeError):
+        return False

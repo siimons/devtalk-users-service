@@ -13,7 +13,7 @@ from app.api.security.exceptions import rate_limit_exceeded_handler
 
 def create_application() -> FastAPI:
     app = FastAPI(
-        title="Dev Talk API - Users",
+        title="Dev Talk - Users Service",
         description="RESTful API for managing users",
         version="1.0.0",
         docs_url="/api/docs",

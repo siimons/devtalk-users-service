@@ -1,4 +1,4 @@
-# User Service - Dev Talk
+# Dev Talk - Users Service
 
 ## Описание
 
