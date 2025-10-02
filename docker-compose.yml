@@ -1,0 +1,121 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: devtalk_users_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations/models.sql:/docker-entrypoint-initdb.d/models.sql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: devtalk_users_redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      timeout: 10s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dev-talk/users-service:${APP_VERSION:-latest}
+    container_name: devtalk_users_app
+    environment:
+      # MySQL settings
+      MYSQL_HOST: devtalk_users_mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+      # Redis settings
+      REDIS_HOST: devtalk_users_redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # Celery settings
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
+
+      # Application settings
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "/wait-for-it.sh devtalk_users_mysql:3306 -- /wait-for-it.sh devtalk_users_redis:6379 -- 
+      uvicorn main:app --host 0.0.0.0 --port 8000"
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dev-talk/users-service-celery:${APP_VERSION:-latest}
+    container_name: devtalk_users_celery
+    environment:
+      # MySQL settings
+      MYSQL_HOST: devtalk_users_mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+      # Redis settings
+      REDIS_HOST: devtalk_users_redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # Celery settings
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
+
+      # Application settings
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: >
+      sh -c "/wait-for-it.sh devtalk_users_mysql:3306 -- /wait-for-it.sh devtalk_users_redis:6379 -- 
+      celery -A app.workers.celery worker --loglevel=info"
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
