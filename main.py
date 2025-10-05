@@ -5,7 +5,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from slowapi.middleware import SlowAPIMiddleware
 from app.api.security.exceptions import RateLimitExceededError
 
-from app.api.v1.views import router
+from app.api.v1.endpoints import router
+from app.core.monitoring import setup_monitoring
 from app.core.dependencies.common import lifespan
 from app.api.security.rate_limiter import get_rate_limiter
 from app.api.security.exceptions import rate_limit_exceeded_handler
@@ -32,6 +33,8 @@ def create_application() -> FastAPI:
     )
 
     app.exception_handler(RateLimitExceededError)(rate_limit_exceeded_handler)
+
+    setup_monitoring(app)
 
     return app
 

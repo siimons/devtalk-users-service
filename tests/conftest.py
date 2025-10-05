@@ -3,7 +3,7 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 
-from app.api.v1.views import router
+from app.api.v1.endpoints import router
 from app.core.dependencies.common import db, cache, lifespan
 from app.api.common.hashing import hash_value
 

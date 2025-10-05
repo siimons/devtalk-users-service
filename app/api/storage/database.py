@@ -6,7 +6,7 @@ from app.core.logging import logger
 
 
 class Database:
-    
+
     def __init__(self):
         self.pool = None
 
