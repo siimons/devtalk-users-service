@@ -1,9 +1,23 @@
 version: "3.8"
 
+networks:
+  app_network:
+    name: ${PROJECT_NAME}_${SERVICE_NAME}_app_network
+    driver: bridge
+
+volumes:
+  mysql_data:
+    name: ${PROJECT_NAME}_${SERVICE_NAME}_mysql_data
+    driver: local
+
+  redis_data:
+    name: ${PROJECT_NAME}_${SERVICE_NAME}_redis_data
+    driver: local
+
 services:
   mysql:
     image: mysql:8.0
-    container_name: devtalk_users_mysql
+    container_name: ${PROJECT_NAME}_${SERVICE_NAME}_mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -23,7 +37,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: devtalk_users_redis
+    container_name: ${PROJECT_NAME}_${SERVICE_NAME}_redis
     ports:
       - "6380:6379"
     volumes:
@@ -41,26 +55,28 @@ services:
       context: .
       dockerfile: Dockerfile
     image: dev-talk/users-service:${APP_VERSION:-latest}
-    container_name: devtalk_users_app
+    container_name: ${PROJECT_NAME}_${SERVICE_NAME}_app
     environment:
       # MySQL settings
-      MYSQL_HOST: devtalk_users_mysql
+      MYSQL_HOST: ${PROJECT_NAME}_${SERVICE_NAME}_mysql
       MYSQL_PORT: 3306
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
 
       # Redis settings
-      REDIS_HOST: devtalk_users_redis
+      REDIS_HOST: ${PROJECT_NAME}_${SERVICE_NAME}_redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       # Celery settings
-      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
-      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_${SERVICE_NAME}_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_${SERVICE_NAME}_redis:6379/0
 
       # Application settings
       ENVIRONMENT: ${ENVIRONMENT:-production}
+
+      PYTHONPATH: /app
     depends_on:
       mysql:
         condition: service_healthy
@@ -71,31 +87,32 @@ services:
     ports:
       - "8000:8000"
     command: >
-      sh -c "/wait-for-it.sh devtalk_users_mysql:3306 -- /wait-for-it.sh devtalk_users_redis:6379 -- 
-      uvicorn main:app --host 0.0.0.0 --port 8000"
+      sh -c "/wait-for-it.sh ${PROJECT_NAME}_${SERVICE_NAME}_mysql:3306 -t 30 -- 
+      /wait-for-it.sh ${PROJECT_NAME}_${SERVICE_NAME}_redis:6379 -t 30 -- 
+      uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1"
 
   celery_worker:
     build:
       context: .
       dockerfile: Dockerfile
     image: dev-talk/users-service-celery:${APP_VERSION:-latest}
-    container_name: devtalk_users_celery
+    container_name: ${PROJECT_NAME}_${SERVICE_NAME}_celery
     environment:
       # MySQL settings
-      MYSQL_HOST: devtalk_users_mysql
+      MYSQL_HOST: ${PROJECT_NAME}_${SERVICE_NAME}_mysql
       MYSQL_PORT: 3306
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
 
       # Redis settings
-      REDIS_HOST: devtalk_users_redis
+      REDIS_HOST: ${PROJECT_NAME}_${SERVICE_NAME}_redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       # Celery settings
-      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
-      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@devtalk_users_redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_${SERVICE_NAME}_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@${PROJECT_NAME}_${SERVICE_NAME}_redis:6379/0
 
       # Application settings
       ENVIRONMENT: ${ENVIRONMENT:-production}
@@ -107,15 +124,5 @@ services:
     networks:
       - app_network
     command: >
-      sh -c "/wait-for-it.sh devtalk_users_mysql:3306 -- /wait-for-it.sh devtalk_users_redis:6379 -- 
+      sh -c "/wait-for-it.sh ${PROJECT_NAME}_${SERVICE_NAME}_mysql:3306 -- /wait-for-it.sh ${PROJECT_NAME}_${SERVICE_NAME}_redis:6379 -- 
       celery -A app.workers.celery worker --loglevel=info"
-
-volumes:
-  mysql_data:
-    driver: local
-  redis_data:
-    driver: local
-
-networks:
-  app_network:
-    driver: bridge

@@ -26,6 +26,8 @@ def create_application() -> FastAPI:
 
     app.include_router(router, prefix="/api/v1", tags=["Users"])
 
+    setup_monitoring(app)
+
     app.add_middleware(SlowAPIMiddleware)
     app.add_middleware(
         GZipMiddleware,
@@ -33,8 +35,6 @@ def create_application() -> FastAPI:
     )
 
     app.exception_handler(RateLimitExceededError)(rate_limit_exceeded_handler)
-
-    setup_monitoring(app)
 
     return app
 

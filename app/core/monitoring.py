@@ -215,9 +215,9 @@ def setup_monitoring(app: FastAPI) -> None:
     Args:
         app: Экземпляр FastAPI приложения для инструментирования.
     """
-    instrumentator = create_instrumentator()
-    instrumentator.instrument(app)
+    create_metrics_router(app)
 
     app.add_middleware(MonitoringMiddleware)
 
-    create_metrics_router(app)
+    instrumentator = create_instrumentator()
+    instrumentator.instrument(app)
